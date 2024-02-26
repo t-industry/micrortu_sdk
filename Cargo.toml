@@ -2,6 +2,11 @@
 name = "micrortu_sdk"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/t-industry/micrortu_sdk"
+keywords = ["wasm", "micrortu", "scripting", "sdk"]
+categories = ["no-std"]
+license = "MIT OR Apache-2.0"
+description = "SDK for MicroRTU"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
