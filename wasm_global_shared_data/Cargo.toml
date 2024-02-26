@@ -1,0 +1,13 @@
+[package]
+name = "wasm_global_shared_data"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+zerocopy = { version = "0.7.32", features = ["derive"], default-features = false }
+ie_base = { path = "../ie_base" }
+
+# [lints]
+# workspace = true

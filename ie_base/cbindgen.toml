@@ -1,0 +1,10 @@
+include_guard = "URTU_IE_BASE_H_"
+
+[layout]
+packed = "__attribute__((packed))"
+
+[enum]
+prefix_with_name = true
+
+[export]
+include=["SmallIE", "CA", "IOA"]
