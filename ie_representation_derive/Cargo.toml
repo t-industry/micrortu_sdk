@@ -1,15 +1,20 @@
 [package]
-name = "ie_representation_derive"
-version = "0.1.0"
-edition = "2021"
+name = "micrortu_ie_representation_derive"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+license.workspace = true
+description.workspace = true
 
 [lib]
 proc-macro = true
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = "2.0"
-# num-traits = "0.2"
+
+[lints]
+workspace = true

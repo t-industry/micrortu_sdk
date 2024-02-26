@@ -1,5 +1,14 @@
 [package]
 name = "micrortu_sdk"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+license.workspace = true
+description.workspace = true
+
+[workspace.package]
 version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/t-industry/micrortu_sdk"
@@ -8,13 +17,65 @@ categories = ["no-std"]
 license = "MIT OR Apache-2.0"
 description = "SDK for MicroRTU"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace.dependencies]
+zerocopy = { version = "0.7.32", features = ["derive"], default-features = false }
+
+[workspace.dependencies.ie_base]
+package = "micrortu_ie_base"
+path = "./ie_base"
+version = "0.1.0"
+
+[workspace.dependencies.ie_representation_derive]
+package = "micrortu_ie_representation_derive"
+path = "./ie_representation_derive"
+version = "0.1.0"
+
+[workspace.dependencies.wasm_global_shared_data]
+package = "micrortu_wasm_global_shared_data"
+path = "./wasm_global_shared_data"
+version = "0.1.0"
+
+
+[workspace]
+members = [
+  "./ie_base",
+  "./ie_representation_derive",
+  "./wasm_global_shared_data",
+]
+resolver = "2"
 
 [dependencies]
-ie_base = { path = "./ie_base", version = "0.1.0" }
-ie_representation_derive = { path = "./ie_representation_derive", version = "0.1.0" }
+ie_base.workspace = true
+ie_representation_derive.workspace = true
+wasm_global_shared_data.workspace = true
 log = "0.4.20"
-wasm_global_shared_data = { path = "./wasm_global_shared_data", version = "0.1.0" }
 
 [dev-dependencies]
 static_cell = "2.0.0"
+[workspace.lints]
+
+[lints]
+workspace = true
+
+[workspace.lints.clippy]
+use_self = "warn"
+pedantic = "warn"
+perf = "warn"
+missing-assert-message = "warn"
+
+module-name-repetitions = "allow"
+default-trait-access = "allow"
+similar-names = "allow"
+manual-assert = "allow"
+redundant-closure-for-method-calls = "allow"
+redundant_closure = "allow"
+single-match-else = "allow"
+too-many-lines = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+cast-precision-loss = "allow"
+cast-possible-wrap = "allow"
+cast-possible-truncation = "allow"
+cast-sign-loss = "allow"
+cast-lossless = "allow"

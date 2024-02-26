@@ -116,7 +116,7 @@ for<'a> extern "C" fn(&'a mut Shared, &'a mut BlockName) -> StepResult;
 
 */
 
-#![cfg_attr(not(std), no_std)]
+#![cfg_attr(not(test), no_std)]
 
 #[no_mangle]
 static mut SHARED: Shared = Shared::new();
