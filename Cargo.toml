@@ -11,10 +11,10 @@ description = "SDK for MicroRTU"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ie_base = { path = "./ie_base" }
-ie_representation_derive = { path = "./ie_representation_derive" }
+ie_base = { path = "./ie_base", version = "0.1.0" }
+ie_representation_derive = { path = "./ie_representation_derive", version = "0.1.0" }
 log = "0.4.20"
-wasm_global_shared_data = { path = "./wasm_global_shared_data" }
+wasm_global_shared_data = { path = "./wasm_global_shared_data", version = "0.1.0" }
 
 [dev-dependencies]
 static_cell = "2.0.0"
