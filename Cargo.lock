@@ -104,7 +104,7 @@ checksum = "523dc4f511e55ab87b694dc30d0f820d60906ef06413f93d4d7a1385599cc149"
 
 [[package]]
 name = "micrortu_ie_base"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bitfield",
  "const-default",
@@ -117,7 +117,7 @@ dependencies = [
 
 [[package]]
 name = "micrortu_ie_representation_derive"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -126,7 +126,7 @@ dependencies = [
 
 [[package]]
 name = "micrortu_sdk"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "log",
  "micrortu_ie_base",
@@ -137,7 +137,7 @@ dependencies = [
 
 [[package]]
 name = "micrortu_wasm_global_shared_data"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "micrortu_ie_base",
  "zerocopy",
