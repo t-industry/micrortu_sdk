@@ -3,7 +3,7 @@ use const_default::ConstDefault;
 use int_enum::IntEnum;
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
-use crate::{qds::QualityDescriptorHolder, impl_qds_for, RawQualityDescriptor};
+use crate::{impl_qds_for, qds::QualityDescriptorHolder, RawQualityDescriptor};
 
 /// TI1, `M_SP_NA_1`, Single-point information without time tag
 #[repr(C, packed)]
@@ -33,7 +33,7 @@ pub struct M_ME_NE_1 {
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
 pub struct SIQ {
-    pub raw: RawQualityDescriptor
+    pub raw: RawQualityDescriptor,
 }
 impl_qds_for!(SIQ);
 
@@ -67,7 +67,6 @@ impl From<bool> for DPI {
     }
 }
 
-
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
 pub struct DIQ {
@@ -77,8 +76,8 @@ impl_qds_for!(DIQ);
 
 impl DIQ {
     #[must_use]
-    pub fn dpi(&self) -> Option<DPI> {
-        DPI::from_int(self.raw.bit_range(1, 0)).ok()
+    pub fn dpi(&self) -> DPI {
+        DPI::from_int(self.raw.bit_range(1, 0)).unwrap()
     }
     pub fn set_dpi(&mut self, value: DPI) -> &mut Self {
         self.raw.set_bit_range(1, 0, value.int_value());

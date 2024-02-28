@@ -51,11 +51,7 @@ impl From<SmallIE> for f32 {
                     0.0
                 }
             }
-            SmallIE::TI3(ie) => ie
-                .value
-                .dpi()
-                .and_then(|d| (d as u8).to_f32())
-                .unwrap_or_default(),
+            SmallIE::TI3(ie) => (ie.value.dpi() as u8).to_f32().unwrap_or_default(),
             SmallIE::TI13(ie) => ie.value,
             SmallIE::TI45(ie) => {
                 if ie.value.scs() {
@@ -78,7 +74,7 @@ impl TryUpdateFrom<Self> for SmallIE {
             (Self::TI1(ie), Self::TI1(ie_src)) => *ie = ie_src,
             (Self::TI1(ie), Self::TI3(ie_src)) => {
                 *ie.value.mut_qds_raw() = ie_src.value.qds_raw();
-                ie.value.set_spi(ie_src.value.dpi() == Some(DPI::On));
+                ie.value.set_spi(ie_src.value.dpi() == DPI::On);
             }
             (Self::TI3(ie), Self::TI1(ie_src)) => {
                 *ie.value.mut_qds_raw() = ie_src.value.qds_raw();
@@ -104,8 +100,8 @@ impl TryFrom<SmallIE> for bool {
             SmallIE::TI1(ie) => Ok(ie.value.spi()),
             SmallIE::TI45(ie) => Ok(ie.value.scs()),
             SmallIE::TI3(ie) => match ie.value.dpi() {
-                Some(DPI::Off) => Ok(false),
-                Some(DPI::On) => Ok(true),
+                DPI::Off => Ok(false),
+                DPI::On => Ok(true),
                 _ => Err(IEConversionError),
             },
             _ => Err(IEConversionError {}),
