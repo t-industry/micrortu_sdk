@@ -124,6 +124,7 @@ static mut SHARED: Shared = Shared::new();
 mod getters_setters;
 pub mod trap_err;
 mod log;
+pub mod bump_allocator;
 
 pub use getters_setters::*;
 pub use ie_base;
@@ -136,7 +137,7 @@ pub use wasm_global_shared_data::{
 };
 
 #[no_mangle]
-extern "C" fn init() {
+pub extern "C" fn init() {
     ::log::set_logger(&log::LOGGER).unwrap();
 }
 
