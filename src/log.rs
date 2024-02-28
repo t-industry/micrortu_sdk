@@ -47,17 +47,17 @@ impl Write for LogWriter {
     }
 }
 
-fn write_to_buf(args: &fmt::Arguments<'_>) {
-    _ = write!(LogWriter, "{}", args)
-}
-
 impl log::Log for MicroRTULog {
     fn enabled(&self, _metadata: &log::Metadata) -> bool {
-        todo!()
+        true
     }
 
     fn log(&self, record: &log::Record) {
-        write_to_buf(record.args());
+        extern "C" {
+            fn log_emit(level: i64);
+        }
+
+        _ = write!(LogWriter, "{}", record.args());
 
         let level = match record.level() {
             log::Level::Error => 1,
@@ -67,12 +67,8 @@ impl log::Log for MicroRTULog {
             log::Level::Trace => 5,
         };
 
-        extern "C" {
-            fn log(level: u32);
-        }
-
         unsafe {
-            log(level);
+            log_emit(level);
         }
     }
 
