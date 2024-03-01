@@ -141,6 +141,7 @@ pub use wasm_global_shared_data::{
 
 pub fn init_logger() {
     ::log::set_logger(&log::LOGGER).unwrap();
+    ::log::set_max_level(::log::LevelFilter::Trace);
 }
 
 #[doc(hidden)]
