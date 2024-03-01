@@ -82,6 +82,8 @@ pub extern "C" fn step_add(shared: &mut Shared, _: &mut AddBlock) -> StepResult 
 To define block `block_name`, that can be later referenced in MicroRTU
 configuration, you need export 3 functions from your final wasm blob.
 
+Every implementation must export `init` function with signature `() -> ()`.
+
 ### `factory_{block_name}`
 
 `factory_{block_name}` is a function that will be called to produce a wasm block.
@@ -132,12 +134,12 @@ pub use ie_base;
 pub use ie_representation_derive::ports;
 
 pub use ie_base::IEBuf;
+pub use bump_allocator::BumpAllocator;
 pub use wasm_global_shared_data::{
     BindingDefinition, Direction, ParseError, Shared, StepResult, IN, IN_OUT, OUT, REQUIRED,
 };
 
-#[no_mangle]
-pub extern "C" fn init() {
+pub fn init_logger() {
     ::log::set_logger(&log::LOGGER).unwrap();
 }
 

@@ -11,6 +11,10 @@ pub struct BumpAllocator {
     buffer: RefCell<SliceOrEmpty>,
 }
 
+// Safety: BumpAllocator is not Sync, but wasm is single-threaded
+#[cfg(target_arch = "wasm32")]
+unsafe impl Sync for BumpAllocator {}
+
 impl BumpAllocator {
     #[must_use]
     pub const fn new() -> Self {
