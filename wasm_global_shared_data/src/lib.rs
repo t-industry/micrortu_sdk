@@ -52,9 +52,9 @@ pub struct BindingDefinition {
 }
 
 /// Erorrs that can occur while parsing genarated ports from `Shared`,
-/// written by MicroRTU.
-/// Indicates misconfiguration of MicroRTU or a bug in `ports!` macro or
-/// MicroRTU firmware.
+/// written by `MicroRTU`.
+/// Indicates misconfiguration of `MicroRTU` or a bug in `ports!` macro or
+/// `MicroRTU` firmware.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy)]
 pub enum ParseError {
@@ -114,6 +114,16 @@ impl Shared {
             dirty_ports: 0,
             control_period_ms: 0,
         }
+    }
+
+    pub fn set_ports(&mut self, ports: &[BindingDefinition]) {
+        self.ports[..ports.len()].copy_from_slice(ports);
+        self.used_ports_len = ports.len() as u32;
+    }
+
+    pub fn set_params(&mut self, params: &[BindingDefinition]) {
+        self.params[..params.len()].copy_from_slice(params);
+        self.used_params_len = params.len() as u32;
     }
 }
 
