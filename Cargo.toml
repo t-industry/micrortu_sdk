@@ -54,9 +54,6 @@ log = "0.4.20"
 static_cell = "2.0.0"
 [workspace.lints]
 
-[lints]
-workspace = true
-
 [workspace.lints.clippy]
 use_self = "warn"
 pedantic = "warn"
