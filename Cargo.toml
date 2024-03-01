@@ -9,7 +9,7 @@ license.workspace = true
 description.workspace = true
 
 [workspace.package]
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 repository = "https://github.com/t-industry/micrortu_sdk"
 keywords = ["wasm", "micrortu", "scripting", "sdk"]
@@ -23,17 +23,17 @@ zerocopy = { version = "0.7.32", features = ["derive"], default-features = false
 [workspace.dependencies.ie_base]
 package = "micrortu_ie_base"
 path = "./ie_base"
-version = "0.1.3"
+version = "0.1.4"
 
 [workspace.dependencies.ie_representation_derive]
 package = "micrortu_ie_representation_derive"
 path = "./ie_representation_derive"
-version = "0.1.3"
+version = "0.1.4"
 
 [workspace.dependencies.wasm_global_shared_data]
 package = "micrortu_wasm_global_shared_data"
 path = "./wasm_global_shared_data"
-version = "0.1.3"
+version = "0.1.4"
 
 
 [workspace]
