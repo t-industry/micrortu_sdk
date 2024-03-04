@@ -4,7 +4,7 @@ use num::{Num, ToPrimitive};
 use crate::qds::QualityDescriptorHolder;
 
 use crate::{measurement::DPI, IEConversionError, SmallIE, TryUpdateFrom};
-use crate::{M_ME_NE_1, M_SP_NA_1, SIQ};
+use crate::{DIQ, M_DP_NA_1, M_ME_NE_1, M_SP_NA_1, SIQ};
 
 impl<T: IntEnum> From<IntEnumError<T>> for IEConversionError {
     fn from(_value: IntEnumError<T>) -> Self {
@@ -128,6 +128,16 @@ impl From<bool> for M_SP_NA_1 {
         Self {
             value: *SIQ::default().set_spi(value),
         }
+    }
+}
+
+impl TryFrom<u8> for M_DP_NA_1 {
+    type Error = IEConversionError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        Ok(M_DP_NA_1 {
+            value: *DIQ::default().set_dpi(DPI::from_int(value).map_err(|_| IEConversionError)?),
+        })
     }
 }
 
