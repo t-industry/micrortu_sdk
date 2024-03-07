@@ -17,6 +17,9 @@ categories = ["no-std"]
 license = "MIT OR Apache-2.0"
 description = "SDK for MicroRTU"
 
+[features]
+home = []
+
 [workspace.dependencies]
 zerocopy = { version = "0.7.32", features = ["derive"], default-features = false }
 

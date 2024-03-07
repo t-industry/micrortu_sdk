@@ -1,8 +1,5 @@
 use core::fmt::{self, Write};
 
-pub(crate) struct MicroRTULog;
-pub(crate) static LOGGER: MicroRTULog = MicroRTULog;
-
 struct LogWriter;
 impl Write for LogWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
@@ -16,20 +13,20 @@ impl Write for LogWriter {
 
         while !bytes.is_empty() {
             let len = bytes.len().min(120) as u64;
-            let (bytes_120, rest) = bytes.split_at(len as usize);
+            let (payload, rest) = bytes.split_at(len as usize);
             bytes = rest;
+            let mut bytes = [0; 120];
+            bytes[..payload.len()].copy_from_slice(payload);
+
+            fn b(bytes: &[u8; 120], idx: usize) -> u64 {
+                let mut buf = [0; 8];
+                buf.copy_from_slice(&bytes[idx * 8..][..8]);
+                u64::from_le_bytes(buf)
+            }
 
             macro_rules! b {
                 ($b:expr) => {
-                    'blk: {
-                        let Some(b) = bytes_120.get(($b - 1) * 8..) else {
-                            break 'blk 0;
-                        };
-                        let Some(b) = b.get(..8) else {
-                            break 'blk 0;
-                        };
-                        u64::from_ne_bytes([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]])
-                    }
+                    b(&bytes, $b)
                 };
             }
 
@@ -37,8 +34,8 @@ impl Write for LogWriter {
                 #[rustfmt::skip]
                 log_append(
                     len,
-                    b!(1), b!(2), b!(3), b!(4), b!(5), b!(6), b!(7), b!(8),
-                    b!(9), b!(10), b!(11), b!(12), b!(13), b!(14), b!(15),
+                    b!(0), b!(1), b!(2), b!(3), b!(4), b!(5), b!(6), b!(7),
+                    b!(8), b!(9), b!(10), b!(11), b!(12), b!(13), b!(14),
                 );
             }
         }
@@ -47,30 +44,43 @@ impl Write for LogWriter {
     }
 }
 
-impl log::Log for MicroRTULog {
-    fn enabled(&self, _metadata: &log::Metadata) -> bool {
-        true
+pub fn log(level: i64, format: &fmt::Arguments) {
+    extern "C" {
+        fn log_emit(level: i64);
     }
 
-    fn log(&self, record: &log::Record) {
-        extern "C" {
-            fn log_emit(level: i64);
-        }
+    _ = write!(LogWriter, "{format}");
 
-        _ = write!(LogWriter, "{}", record.args());
+    unsafe { log_emit(level) };
+}
 
-        let level = match record.level() {
-            log::Level::Error => 1,
-            log::Level::Warn => 2,
-            log::Level::Info => 3,
-            log::Level::Debug => 4,
-            log::Level::Trace => 5,
-        };
-
-        unsafe {
-            log_emit(level);
-        }
+#[macro_export]
+macro_rules! error {
+    ($($arg:tt)*) => {
+        ::micrortu_sdk::log::log(1, &format_args!($($arg)*))
     }
-
-    fn flush(&self) {}
+}
+#[macro_export]
+macro_rules! warn {
+    ($($arg:tt)*) => {
+        ::micrortu_sdk::log::log(2, &format_args!($($arg)*))
+    }
+}
+#[macro_export]
+macro_rules! info {
+    ($($arg:tt)*) => {
+        ::micrortu_sdk::log::log(3, &format_args!($($arg)*))
+    }
+}
+#[macro_export]
+macro_rules! debug {
+    ($($arg:tt)*) => {
+        ::micrortu_sdk::log::log(4, &format_args!($($arg)*))
+    }
+}
+#[macro_export]
+macro_rules! trace {
+    ($($arg:tt)*) => {
+        ::micrortu_sdk::log::log(5, &format_args!($($arg)*))
+    }
 }

@@ -1,6 +1,7 @@
 use core::cell::Cell;
 
 use ie_base::{IEBuf, IEDeserializationError, SmallIE};
+use wasm_global_shared_data::ParseError;
 
 use crate::wasm_unwrap;
 
@@ -242,4 +243,33 @@ impl<'a> GetSetMultipleOptional<'a> {
     pub fn new(source: &'a mut [IEBuf], dirty: Dirty<'a>) -> Self {
         Self(source, dirty)
     }
+}
+
+pub fn parse_port<'a, 'd>(
+    source: &'a [IEBuf],
+    cursor: &'a usize,
+    dirty: &'d Cell<u64>,
+    is_optional: bool,
+    min_size: u8,
+    max_size: Option<u8>,
+) -> Result<(usize, Dirty<'d>), ParseError> {
+    let mut len = 0;
+    if source.get(len).is_some() {
+        let err = ParseError::NotTerminated;
+        while source.get(len).ok_or(err)?.is_valid() {
+            len = len.wrapping_add(1);
+        }
+    }
+    let dirty = Dirty::new(dirty, *cursor);
+    if len == 0 && is_optional {
+        return Ok((0, dirty));
+    }
+    if len < min_size.into() {
+        return Err(ParseError::NotEnoughData);
+    }
+    if max_size.map_or(false, |m: u8| len > m as usize) {
+        return Err(ParseError::TooMuchData);
+    }
+
+    Ok((len, dirty))
 }

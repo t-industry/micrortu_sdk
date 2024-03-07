@@ -1,3 +1,4 @@
+use std::sync::Mutex;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
@@ -154,7 +155,7 @@ pub fn ports(input: TokenStream) -> TokenStream {
     let mut parse_blocks = vec![];
     let mut names = vec![];
 
-    for port in ports.into_iter() {
+    for port in ports {
         let name = &port.name;
         let mode_str = port.mode.to_string();
         let is_single = port.lower_bound == 1 && port.upper_bound == Some(1);
@@ -187,22 +188,11 @@ pub fn ports(input: TokenStream) -> TokenStream {
             pub #name: #typ<'a>
         });
 
-        let min_size = port.lower_bound as u16;
+        let min_size = port.lower_bound as u8;
         let max_size = port
             .upper_bound
-            .map_or(quote! { None }, |m| quote! { Some(#m as u16) });
+            .map_or(quote! { None }, |m| quote! { Some(#m as u8) });
         let flags = is_optional as u16;
-
-        let name_bytes = name.to_string().into_bytes();
-        if name_bytes.len() > 32 {
-            return syn::Error::new_spanned(name, "Port name is too long")
-                .to_compile_error()
-                .into();
-        }
-        let mut name_array = [0; 32];
-        name_array[..name_bytes.len()].copy_from_slice(&name_bytes);
-        let name_array = name_array.map(|c| quote! { #c });
-        let name_array = quote! { [ #(#name_array),* ] };
 
         let direction = match mode_str.as_str() {
             "In" => quote! { ::micrortu_sdk::IN },
@@ -215,42 +205,49 @@ pub fn ports(input: TokenStream) -> TokenStream {
             }
         };
 
-        let to_nonzero_max_size = port.upper_bound.map_or(0, |m| m as u16);
+        let to_nonzero_max_size = port.upper_bound.map_or(0, |m| m as u8);
+
+        let name_str = name.to_string();
+        let name_len = name_str.len() as u8;
+        let name_offset = intern_static_string(&name_str);
 
         report_blocks.push(quote! {
-            ::micrortu_sdk::BindingDefinition {
-                name: #name_array,
-                flags: #flags,
-                min_size: #min_size,
-                max_size: ::core::num::NonZeroU16::new(#to_nonzero_max_size),
-                direction: #direction,
+            {
+
+            #[cfg(target_arch = "wasm32")] {
+                ::micrortu_sdk::BindingDefinition {
+                    name_offset: #name_offset,
+                    name_len: #name_len,
+                    flags: #flags,
+                    min_size: #min_size,
+                    max_size: ::core::num::NonZeroU8::new(#to_nonzero_max_size),
+                    direction: #direction,
+                }
+            }
+            #[cfg(not(target_arch = "wasm32"))] {
+                const NAME: &str = stringify!(#name);
+                ::micrortu_sdk::NativeBindingDefinition::<'static> {
+                    name: &NAME,
+                    flags: #flags,
+                    min_size: #min_size,
+                    max_size: ::core::num::NonZeroU8::new(#to_nonzero_max_size),
+                    direction: #direction,
+                }
+            }
+
             }
         });
 
-        parse_blocks.push(quote! {#name: 'blk: {
-            let mut len = 0;
-            if source.get(len).is_some() {
-                let err = ::micrortu_sdk::ParseError::NotTerminated;
-                while source.get(len).ok_or(err)?.is_valid() {
-                    len = len.wrapping_add(1);
-                }
-            }
-            let dirty = ::micrortu_sdk::Dirty::new(dirty, cursor);
-            if len == 0 && #is_optional {
-                break 'blk #typ::new(&mut [], dirty);
-            }
-            if len < #min_size.into() {
-                return Err(::micrortu_sdk::ParseError::NotEnoughData);
-            }
-            if #max_size.map_or(false, |m: u16| len > m as usize) {
-                return Err(::micrortu_sdk::ParseError::TooMuchData);
-            }
+        parse_blocks.push(quote! {#name: {
+            let (len, dirty) = ::micrortu_sdk::parse_port(&source, &cursor, &dirty, #is_optional, #min_size, #max_size)?;
             let (this, new_source) = source.split_at_mut(len);
-            source = &mut new_source[1..]; // skip null terminator
+            source = new_source
+                .get_mut(1..)
+                .ok_or(::micrortu_sdk::ParseError::NotTerminated)?; // skip null terminator
             cursor = cursor.wrapping_add(len).wrapping_add(1); // skip null terminator
-
             #typ::new(this, dirty)
-        },});
+          },
+        });
     }
 
     let parse = quote! {
@@ -266,8 +263,16 @@ pub fn ports(input: TokenStream) -> TokenStream {
     };
 
     let report = quote! {
-        fn report() -> &'static [::micrortu_sdk::BindingDefinition] {
-            const BINDINGS: &[::micrortu_sdk::BindingDefinition] = &[
+        #[cfg(target_arch = "wasm32")]
+        pub fn report() -> &'static [::micrortu_sdk::BindingDefinition] {
+            static BINDINGS: &[::micrortu_sdk::BindingDefinition] = &[
+                #(#report_blocks,)*
+            ];
+            BINDINGS
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        pub fn report() -> &'static [::micrortu_sdk::NativeBindingDefinition<'static>] {
+            const BINDINGS: &[::micrortu_sdk::NativeBindingDefinition<'static>] = &[
                 #(#report_blocks,)*
             ];
             BINDINGS
@@ -295,4 +300,30 @@ pub fn ports(input: TokenStream) -> TokenStream {
     };
 
     expanded.into()
+}
+
+static STRINGS: Mutex<String> = Mutex::new(String::new());
+
+#[proc_macro]
+pub fn finalize(_: TokenStream) -> TokenStream {
+    let final_string = STRINGS.lock().expect("poison").clone();
+    let len = final_string.len();
+    let bytes_array = final_string.as_bytes().iter().map(|&b| quote! { #b });
+    let bytes_array = quote! { [ #(#bytes_array),* ] };
+    let doc = format!(" Collected strings: {final_string:?}");
+
+    let expanded = quote! {
+        #[no_mangle]
+        #[doc = #doc]
+        static COLLECTED_STRINGS: [u8; #len] = #bytes_array;
+    };
+
+    expanded.into()
+}
+
+fn intern_static_string(s: &str) -> u16 {
+    let mut strings = STRINGS.lock().expect("poison");
+    let len = strings.len();
+    strings.push_str(s);
+    len.try_into().expect("too many strings interned")
 }

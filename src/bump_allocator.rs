@@ -12,7 +12,7 @@ pub struct BumpAllocator {
 }
 
 // Safety: BumpAllocator is not Sync, but wasm is single-threaded
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", feature = "home"))]
 unsafe impl Sync for BumpAllocator {}
 
 impl BumpAllocator {

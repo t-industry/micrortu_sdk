@@ -121,28 +121,29 @@ for<'a> extern "C" fn(&'a mut Shared, &'a mut BlockName) -> StepResult;
 #![cfg_attr(not(test), no_std)]
 
 #[no_mangle]
-static mut SHARED: Shared = Shared::new();
+static mut SHARED: MaybeUninit<Shared> = MaybeUninit::zeroed();
 
-mod getters_setters;
-pub mod trap_err;
-mod log;
 pub mod bump_allocator;
+mod getters_setters;
+pub mod log;
+pub mod trap_err;
+
+use core::mem::MaybeUninit;
 
 pub use getters_setters::*;
 pub use ie_base;
 /// Macros for generating parser of arguments block requires.
-pub use ie_representation_derive::ports;
+pub use ie_representation_derive::{ports, finalize};
 
-pub use ie_base::IEBuf;
 pub use bump_allocator::BumpAllocator;
+pub use ie_base::IEBuf;
 pub use wasm_global_shared_data::{
-    BindingDefinition, Direction, ParseError, Shared, StepResult, IN, IN_OUT, OUT, REQUIRED,
+    BindingDefinition, Direction, NativeBindingDefinition, ParseError, Shared, StepResult, IN,
+    IN_OUT, OUT, REQUIRED,
 };
 
-pub fn init_logger() {
-    ::log::set_logger(&log::LOGGER).unwrap();
-    ::log::set_max_level(::log::LevelFilter::Trace);
-}
+
+pub fn init_logger() {}
 
 #[doc(hidden)]
 pub fn wasm_unwrap<T>(v: Option<T>) -> T {

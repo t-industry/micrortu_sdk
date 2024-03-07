@@ -1,6 +1,6 @@
 #![no_std]
 
-use core::num::NonZeroU16;
+use core::num::NonZeroU8;
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
 pub use ie_base::IEBuf;
@@ -25,32 +25,6 @@ pub struct Shared {
 
 pub const REQUIRED: u16 = 0x0001;
 
-/// A binding definition.
-///
-/// Would be generated automatically by the `ports` macro.
-///
-/// For example, if block accepts a parameter `x` which is a non-empty vector
-/// with maximum size of 10, the binding definition would be:
-/// ```rust
-/// BindingDefinition {
-///    name: { let mut name = [0; 32]; name[..1].copy_from_slice(b"x"); name },
-///    flags: REQUIRED,
-///    min_size: 1,
-///    max_size: Some(NonZeroU16::new(10).unwrap()),
-///    direction: IN,
-/// }
-/// ```
-#[repr(C)]
-#[derive(Debug, AsBytes, FromZeroes, FromBytes, Clone, Copy)]
-pub struct BindingDefinition {
-    /// Utf-8 encoded string. If name is less then 32 bytes, it should be null-terminated.
-    pub name: [u8; 32],
-    pub flags: u16,
-    pub min_size: u16,
-    pub max_size: Option<NonZeroU16>,
-    pub direction: Direction,
-}
-
 /// Erorrs that can occur while parsing genarated ports from `Shared`,
 /// written by `MicroRTU`.
 /// Indicates misconfiguration of `MicroRTU` or a bug in `ports!` macro or
@@ -70,7 +44,7 @@ pub enum ParseError {
 /// All other values are invalid, but safe.
 #[repr(C)]
 #[derive(Debug, AsBytes, FromZeroes, FromBytes, Clone, Copy)]
-pub struct Direction(pub u16);
+pub struct Direction(pub u8);
 
 /// The result of a step. `0` means success, anything else is an error.
 /// Implementation could also trap, but it's not recommended.
@@ -96,11 +70,12 @@ impl Shared {
     pub const fn new() -> Self {
         let iebuf = IEBuf([0; core::mem::size_of::<IEBuf>()]);
         let bd = BindingDefinition {
-            name: [0; 32],
+            name_offset: 0,
+            name_len: 0,
             flags: 0,
             min_size: 0,
             max_size: None,
-            direction: IN,
+            direction: Direction(0),
         };
 
         Self {
@@ -127,11 +102,80 @@ impl Shared {
     }
 }
 
+/// A binding definition.
+///
+/// Would be generated automatically by the `ports` macro.
+///
+/// For example, if block accepts a parameter `x` which is a non-empty vector
+/// with maximum size of 10, the binding definition would be:
+/// ```rust
+/// use micrortu_wasm_global_shared_data::{IN, REQUIRED, BindingDefinition};
+/// use core::num::NonZeroU8;
+///
+/// let def = BindingDefinition {
+///    name_offset: 0,
+///    name_len: 0,
+///    flags: REQUIRED,
+///    min_size: 1,
+///    max_size: Some(NonZeroU8::new(10).unwrap()),
+///    direction: IN,
+/// };
+/// ```
+#[repr(C)]
+#[derive(Debug, AsBytes, FromZeroes, FromBytes, Clone, Copy)]
+pub struct BindingDefinition {
+    pub name_offset: u16,
+    pub flags: u16,
+    pub min_size: u8,
+    pub max_size: Option<NonZeroU8>,
+    pub direction: Direction,
+    pub name_len: u8,
+}
+
+/// A `BindingDefinition` for native (non-wasm) blocks.
+#[derive(Debug, Clone, Copy)]
+pub struct NativeBindingDefinition<'a> {
+    pub name: &'a str,
+    pub flags: u16,
+    pub min_size: u8,
+    pub max_size: Option<NonZeroU8>,
+    pub direction: Direction,
+}
+
 impl BindingDefinition {
-    /// Helper function to get the name of the binding.
+    // Returns the name of the binding.
+    // # Arguments
+    // `collected_names` - a slice that starts at the beginning of the collected names.
+    //                     It is allowed to have extra data after the names.
     #[must_use]
-    pub fn name(&self) -> Option<&str> {
-        let len = self.name.iter().position(|&c| c == 0).unwrap_or(32);
-        core::str::from_utf8(&self.name[..len]).ok()
+    pub fn name<'a>(&self, collected_names: &'a [u8]) -> Option<&'a str> {
+        let offset = self.name_offset as usize;
+        let len = self.name_len as usize;
+        core::str::from_utf8(collected_names.get(offset..)?.get(..len)?).ok()
+    }
+}
+
+impl BindingDefinition {
+    #[must_use]
+    pub fn into_native(self, collected_names: &[u8]) -> Option<NativeBindingDefinition> {
+        Some(NativeBindingDefinition {
+            name: self.name(collected_names)?,
+            flags: self.flags,
+            min_size: self.min_size,
+            max_size: self.max_size,
+            direction: self.direction,
+        })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::Shared;
+    use zerocopy::{AsBytes, FromZeroes};
+
+    #[test]
+    fn assert_shared_default_zeroed() {
+        assert_eq!(Shared::new().as_bytes(), Shared::new_zeroed().as_bytes());
+        assert_eq!(Shared::default().as_bytes(), Shared::new_zeroed().as_bytes());
     }
 }
