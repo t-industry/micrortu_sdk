@@ -192,7 +192,7 @@ pub fn ports(input: TokenStream) -> TokenStream {
         let max_size = port
             .upper_bound
             .map_or(quote! { None }, |m| quote! { Some(#m as u8) });
-        let flags = is_optional as u16;
+        let flags = !is_optional as u16;
 
         let direction = match mode_str.as_str() {
             "In" => quote! { ::micrortu_sdk::IN },
