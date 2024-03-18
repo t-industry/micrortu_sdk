@@ -251,7 +251,7 @@ pub fn ports(input: TokenStream) -> TokenStream {
     }
 
     let parse = quote! {
-        fn parse(mut source: &'a mut [::micrortu_sdk::IEBuf], dirty: &'a mut u64)
+        fn parse(mut source: &'a mut [::micrortu_sdk::IEBuf], dirty: &'a mut [u8; 8])
             -> Result<Self, ::micrortu_sdk::ParseError>
         {
             let dirty = ::core::cell::Cell::from_mut(dirty);

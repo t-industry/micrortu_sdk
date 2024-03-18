@@ -16,18 +16,19 @@ pub struct GetMultipleOptional<'a>(&'a [IEBuf]);
 
 #[derive(Debug, Clone, Copy)]
 pub struct Dirty<'a> {
-    bits: &'a Cell<u64>,
+    bits: &'a Cell<[u8; 8]>,
     starting: usize,
 }
 
 impl<'a> Dirty<'a> {
     #[doc(hidden)]
-    pub fn new(bits: &'a Cell<u64>, starting: usize) -> Self {
+    pub fn new(bits: &'a Cell<[u8; 8]>, starting: usize) -> Self {
         Self { bits, starting }
     }
     fn set(self, index: usize) {
-        self.bits
-            .set(self.bits.get() | (1 << (index + self.starting)));
+        self.bits.set(u64::to_be_bytes(
+            u64::from_be_bytes(self.bits.get()) | (1 << (index + self.starting)),
+        ));
     }
 }
 
@@ -248,7 +249,7 @@ impl<'a> GetSetMultipleOptional<'a> {
 pub fn parse_port<'a, 'd>(
     source: &'a [IEBuf],
     cursor: &'a usize,
-    dirty: &'d Cell<u64>,
+    dirty: &'d Cell<[u8; 8]>,
     is_optional: bool,
     min_size: u8,
     max_size: Option<u8>,

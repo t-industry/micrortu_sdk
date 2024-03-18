@@ -17,8 +17,8 @@ pub struct Shared {
     pub latched_params: [IEBuf; 64],
     pub latched_ports: [IEBuf; 64],
 
-    pub dirty_params: u64,
-    pub dirty_ports: u64,
+    pub dirty_params: [u8; 8],
+    pub dirty_ports: [u8; 8],
 
     pub control_period_ms: u64,
 }
@@ -85,8 +85,8 @@ impl Shared {
             used_ports_len: 0,
             latched_params: [iebuf; 64],
             latched_ports: [iebuf; 64],
-            dirty_params: 0,
-            dirty_ports: 0,
+            dirty_params: [0; 8],
+            dirty_ports: [0; 8],
             control_period_ms: 0,
         }
     }
