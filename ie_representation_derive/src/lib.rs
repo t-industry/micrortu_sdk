@@ -264,14 +264,14 @@ pub fn ports(input: TokenStream) -> TokenStream {
 
     let report = quote! {
         #[cfg(target_arch = "wasm32")]
-        pub fn report() -> &'static [::micrortu_sdk::BindingDefinition] {
-            static BINDINGS: &[::micrortu_sdk::BindingDefinition] = &[
+        pub const fn report() -> &'static [::micrortu_sdk::BindingDefinition] {
+            const BINDINGS: &[::micrortu_sdk::BindingDefinition] = &[
                 #(#report_blocks,)*
             ];
             BINDINGS
         }
         #[cfg(not(target_arch = "wasm32"))]
-        pub fn report() -> &'static [::micrortu_sdk::NativeBindingDefinition<'static>] {
+        pub const fn report() -> &'static [::micrortu_sdk::NativeBindingDefinition<'static>] {
             const BINDINGS: &[::micrortu_sdk::NativeBindingDefinition<'static>] = &[
                 #(#report_blocks,)*
             ];
