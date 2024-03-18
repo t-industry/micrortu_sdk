@@ -9,11 +9,6 @@ pub use ie_base::IEBuf;
 #[repr(C)]
 #[derive(AsBytes, FromZeroes, FromBytes)]
 pub struct Shared {
-    pub params: [BindingDefinition; 64],
-    pub ports: [BindingDefinition; 64],
-    pub used_params_len: u32,
-    pub used_ports_len: u32,
-
     pub latched_params: [IEBuf; 64],
     pub latched_ports: [IEBuf; 64],
 
@@ -69,20 +64,8 @@ impl Shared {
     #[must_use]
     pub const fn new() -> Self {
         let iebuf = IEBuf([0; core::mem::size_of::<IEBuf>()]);
-        let bd = BindingDefinition {
-            name_offset: 0,
-            name_len: 0,
-            flags: 0,
-            min_size: 0,
-            max_size: None,
-            direction: Direction(0),
-        };
 
         Self {
-            params: [bd; 64],
-            ports: [bd; 64],
-            used_params_len: 0,
-            used_ports_len: 0,
             latched_params: [iebuf; 64],
             latched_ports: [iebuf; 64],
             dirty_params: [0; 8],
@@ -91,15 +74,6 @@ impl Shared {
         }
     }
 
-    pub fn set_ports(&mut self, ports: &[BindingDefinition]) {
-        self.ports[..ports.len()].copy_from_slice(ports);
-        self.used_ports_len = ports.len() as u32;
-    }
-
-    pub fn set_params(&mut self, params: &[BindingDefinition]) {
-        self.params[..params.len()].copy_from_slice(params);
-        self.used_params_len = params.len() as u32;
-    }
 }
 
 /// A binding definition.
