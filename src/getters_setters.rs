@@ -26,8 +26,8 @@ impl<'a> Dirty<'a> {
         Self { bits, starting }
     }
     fn set(self, index: usize) {
-        self.bits.set(u64::to_be_bytes(
-            u64::from_be_bytes(self.bits.get()) | (1 << (index + self.starting)),
+        self.bits.set(u64::to_le_bytes(
+            u64::from_le_bytes(self.bits.get()) | (1 << (index + self.starting)),
         ));
     }
 }
