@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Function to show help message
+show_help() {
+    echo "Usage: $0 {major|minor|patch}"
+    echo "Bumps the version of the package and all workspace members, commits, tags, pushes, and publishes to crates.io."
+    exit 1
+}
+
+# Check if an argument is provided
+if [ "$#" -ne 1 ]; then
+    show_help
+fi
+
+# Define the Cargo.toml path
+CARGO_TOML="Cargo.toml"
+
+# Extract the current version of the workspace package
+WORKSPACE_VERSION=$(grep '^version = ' $CARGO_TOML | head -1 | sed 's/version = "\(.*\)"/\1/')
+
+# Function to bump version
+bump_version() {
+    local version=$1 bump=$2
+    if [ "$bump" = "major" ]; then
+        echo $version | awk -F. '{$1=$1+1; $2=0; $3=0; print $1"."$2"."$3}'
+    elif [ "$bump" = "minor" ]; then
+        echo $version | awk -F. '{$2=$2+1; $3=0; print $1"."$2"."$3}'
+    elif [ "$bump" = "patch" ]; then
+        echo $version | awk -F. '{$3=$3+1; print $1"."$2"."$3}'
+    else
+        show_help
+    fi
+}
+
+# Apply version bump
+NEW_VERSION=$(bump_version $WORKSPACE_VERSION $1)
+
+echo "Current version: $WORKSPACE_VERSION"
+echo "New version: $NEW_VERSION"
+
+# Replace the old version with the new version in Cargo.toml for the workspace and its members
+sed -i "s/^version = \"$WORKSPACE_VERSION\"/version = \"$NEW_VERSION\"/g" $CARGO_TOML
+
+exit
+
+# Commit the changes
+git add $CARGO_TOML
+git commit -m "Bump version to $NEW_VERSION"
+
+# Tag the commit
+git tag "v$NEW_VERSION"
+
+# Push the commit and tags
+git push origin main --tags
+
+# Extract the members of the workspace
+MEMBERS=$(awk '
+/^\[workspace\]/ {in_workspace = 1}
+in_workspace && /members\s*=\s*\[/ {capture = 1; next}
+capture && /^\]/ {print member; exit}
+capture {
+    gsub(/"|,/, "", $1); # Remove quotes and commas
+    if ($1 != "") {
+        member = (member ? member OFS : "") $1; # Append to member string
+    }
+}
+' OFS=" " $CARGO_TOML)
+
+# Publish each crate to crates.io. You might need to adjust paths and handle dependencies correctly.
+for MEMBER in $MEMBERS; do
+    # Ensure the crate is updated with the new version
+    # Using a subshell to avoid changing the script's current directory
+    (cd $MEMBER && cargo publish)
+    # Sleep to avoid rate limiting from crates.io
+    sleep 1
+done
+
+cargo publish
+
+echo "All crates published successfully."
