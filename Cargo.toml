@@ -38,10 +38,17 @@ package = "micrortu_wasm_global_shared_data"
 path = "./wasm_global_shared_data"
 version = "0.1.7"
 
+[workspace.dependencies.micrortu_build_utils]
+package = "micrortu_build_utils"
+path = "./micrortu_build_utils"
+version = "0.1.7"
+
 
 [workspace]
+# Warn: order is important. Those higher in the list should not depend on those lower in the list.
 members = [
   "./ie_base",
+  "./micrortu_build_utils",
   "./ie_representation_derive",
   "./wasm_global_shared_data",
 ]
@@ -51,6 +58,7 @@ resolver = "2"
 ie_base.workspace = true
 ie_representation_derive.workspace = true
 wasm_global_shared_data.workspace = true
+micrortu_build_utils.workspace = true
 log = "0.4.20"
 
 [dev-dependencies]

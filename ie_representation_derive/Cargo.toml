@@ -15,7 +15,9 @@ proc-macro = true
 proc-macro2 = "1.0"
 quote = "1.0"
 # sqlx = { version = "0.7.3", features = ["sqlite"] }
+micrortu_build_utils = { workspace = true }
 syn = "2.0"
+serde_json = "1.0.114"
 
 [lints]
 workspace = true

@@ -1,6 +1,7 @@
-use std::sync::Mutex;
 use proc_macro::TokenStream;
+use micrortu_build_utils::WasmBlobDump;
 use quote::quote;
+use std::sync::Mutex;
 use syn::{
     braced,
     parse::{Parse, ParseStream},
@@ -77,6 +78,7 @@ struct PortsInput {
 }
 
 impl Parse for PortsInput {
+    #[allow(clippy::redundant_closure_for_method_calls)]
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let attrs = input.call(Attribute::parse_outer)?;
         let visibility: Visibility = input.parse()?;
@@ -312,10 +314,20 @@ pub fn finalize(_: TokenStream) -> TokenStream {
     let bytes_array = quote! { [ #(#bytes_array),* ] };
     let doc = format!(" Collected strings: {final_string:?}");
 
+    let metadata = WasmBlobDump { blocks: vec![] };
+    let metadata = serde_json::to_string(&metadata).expect("serialization error");
+    let metadata_len = metadata.len();
+    let metadata_bytes_array = metadata.as_bytes().iter().map(|&b| quote! { #b });
+    let metadata_bytes_array = quote! { [ #(#metadata_bytes_array),* ] };
+
     let expanded = quote! {
         #[no_mangle]
         #[doc = #doc]
         static COLLECTED_STRINGS: [u8; #len] = #bytes_array;
+
+        #[link_section = "metadata"]
+        #[allow(dead_code)]
+        static META: [u8; #metadata_len] = #metadata_bytes_array;
     };
 
     expanded.into()
