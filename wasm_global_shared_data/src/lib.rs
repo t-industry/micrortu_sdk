@@ -18,7 +18,7 @@ pub struct Shared {
     pub control_period_ms: u64,
 }
 
-pub const REQUIRED: u16 = 0x0001;
+pub const REQUIRED: u8 = 0x0001;
 
 /// Erorrs that can occur while parsing genarated ports from `Shared`,
 /// written by `MicroRTU`.
@@ -99,7 +99,8 @@ impl Shared {
 #[derive(Debug, AsBytes, FromZeroes, FromBytes, Clone, Copy)]
 pub struct BindingDefinition {
     pub name_offset: u16,
-    pub flags: u16,
+    pub flags: u8,
+    pub typ: u8,
     pub min_size: u8,
     pub max_size: Option<NonZeroU8>,
     pub direction: Direction,
@@ -110,7 +111,8 @@ pub struct BindingDefinition {
 #[derive(Debug, Clone, Copy)]
 pub struct NativeBindingDefinition<'a> {
     pub name: &'a str,
-    pub flags: u16,
+    pub flags: u8,
+    pub typ: u8,
     pub min_size: u8,
     pub max_size: Option<NonZeroU8>,
     pub direction: Direction,
@@ -134,6 +136,7 @@ impl BindingDefinition {
     pub fn into_native(self, collected_names: &[u8]) -> Option<NativeBindingDefinition> {
         Some(NativeBindingDefinition {
             name: self.name(collected_names)?,
+            typ: self.typ,
             flags: self.flags,
             min_size: self.min_size,
             max_size: self.max_size,

@@ -193,6 +193,7 @@ checksum = "523dc4f511e55ab87b694dc30d0f820d60906ef06413f93d4d7a1385599cc149"
 name = "micrortu_build_utils"
 version = "0.1.7"
 dependencies = [
+ "micrortu_wasm_global_shared_data",
  "schemars",
  "semver",
  "serde",
@@ -233,6 +234,7 @@ dependencies = [
  "micrortu_ie_representation_derive",
  "micrortu_wasm_global_shared_data",
  "static_cell",
+ "zerocopy",
 ]
 
 [[package]]

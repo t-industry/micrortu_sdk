@@ -133,7 +133,7 @@ use core::mem::MaybeUninit;
 pub use getters_setters::*;
 pub use ie_base;
 /// Macros for generating parser of arguments block requires.
-pub use ie_representation_derive::{ports, finalize};
+pub use ie_representation_derive::{ports, params, finalize, register_block, Config};
 
 pub use bump_allocator::BumpAllocator;
 pub use ie_base::IEBuf;
@@ -155,3 +155,5 @@ pub fn wasm_unwrap<T>(v: Option<T>) -> T {
         None => unreachable!(),
     }
 }
+
+pub trait Config: zerocopy::FromBytes + zerocopy::AsBytes { }

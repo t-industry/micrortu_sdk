@@ -60,6 +60,7 @@ ie_representation_derive.workspace = true
 wasm_global_shared_data.workspace = true
 micrortu_build_utils.workspace = true
 log = "0.4.20"
+zerocopy.workspace = true
 
 [dev-dependencies]
 static_cell = "2.0.0"
