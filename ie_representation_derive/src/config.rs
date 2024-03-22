@@ -8,7 +8,7 @@ use crate::{bindings::parse_block_names, BLOCK_CONFIGS};
 pub fn derive_config(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let mut block_names = vec![];
-    for attr in input.attrs {
+    for attr in &input.attrs {
         match &attr.meta {
             Meta::List(MetaList { path, tokens, .. })
                 if path.get_ident().map_or(false, |i| *i == "block_names") =>
@@ -17,6 +17,11 @@ pub fn derive_config(input: TokenStream) -> TokenStream {
             }
             _ => (),
         }
+    }
+    if block_names.is_empty() {
+        return syn::Error::new_spanned(input, "Config must have #[block_names(...)] attribute")
+            .to_compile_error()
+            .into();
     }
     let name = input.ident;
 
