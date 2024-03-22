@@ -58,7 +58,6 @@ resolver = "2"
 ie_base.workspace = true
 ie_representation_derive.workspace = true
 wasm_global_shared_data.workspace = true
-micrortu_build_utils.workspace = true
 log = "0.4.20"
 zerocopy.workspace = true
 

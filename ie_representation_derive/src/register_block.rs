@@ -96,17 +96,15 @@ pub fn register_block(input: TokenStream) -> TokenStream {
             .into_compile_error()
             .into();
     };
+    let krate = std::env::var("CARGO_PKG_NAME").unwrap();
+    let key = (block_name_str.clone(), krate.clone());
     let block = Block {
         name: block_name_str.to_string(),
         description: String::new(),
         semver_requirement: None,
         ports: ports.clone(),
         params: params.clone(),
-        block_conf: BLOCK_CONFIGS
-            .lock()
-            .expect("poison")
-            .get(&block_name_str)
-            .cloned(),
+        block_conf: BLOCK_CONFIGS.lock().expect("poison").get(&key).cloned(),
     };
     BLOCKS.lock().expect("poison").insert(key, block);
     let ports = to_quote(ports);

@@ -1,9 +1,9 @@
 use micrortu_build_utils::{AllowedType, BlockConf};
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Fields, Type, Meta, MetaList};
+use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Fields, Meta, MetaList, Type};
 
-use crate::{BLOCK_CONFIGS, bindings::parse_block_names};
+use crate::{bindings::parse_block_names, BLOCK_CONFIGS};
 
 pub fn derive_config(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -19,7 +19,6 @@ pub fn derive_config(input: TokenStream) -> TokenStream {
         }
     }
     let name = input.ident;
-    let path = format!("{name}");
 
     let fields = match input.data {
         Data::Struct(DataStruct {
@@ -47,16 +46,21 @@ pub fn derive_config(input: TokenStream) -> TokenStream {
     let block_conf = BlockConf { fields };
     let mut confs = BLOCK_CONFIGS.lock().expect("poison");
 
-    if confs.iter().any(|(p, _)| p == &path) {
-        return syn::Error::new_spanned(name, "Config with that name already exists")
-            .to_compile_error()
-            .into();
-    }
+    for block_name in block_names {
+        let krate = std::env::var("CARGO_PKG_NAME").unwrap();
+        let key = (block_name.to_string(), krate.clone());
 
-    if confs.insert(path, block_conf).is_some() {
-        return syn::Error::new_spanned(name, "Configuration with that name already exists")
-            .to_compile_error()
-            .into();
+        if confs.keys().any(|k| k == &key) {
+            return syn::Error::new_spanned(name, "Config with that name already exists")
+                .to_compile_error()
+                .into();
+        }
+
+        if confs.insert(key, block_conf.clone()).is_some() {
+            return syn::Error::new_spanned(name, "Configuration with that name already exists")
+                .to_compile_error()
+                .into();
+        }
     }
 
     let init_fn_name = format!("_init_{name}");

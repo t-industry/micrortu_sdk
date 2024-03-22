@@ -5,6 +5,10 @@ use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
 pub use ie_base::IEBuf;
 
+#[repr(C, align(8))]
+#[derive(AsBytes, FromZeroes, FromBytes)]
+pub struct Config(pub [u8; 512]);
+
 /// Shared data between the wasm module and the host.
 #[repr(C)]
 #[derive(AsBytes, FromZeroes, FromBytes)]
@@ -15,7 +19,9 @@ pub struct Shared {
     pub dirty_params: [u8; 8],
     pub dirty_ports: [u8; 8],
 
-    pub control_period_ms: u64,
+    pub control_period_ms: u32,
+    pub config_len: u32,
+    pub config: Config
 }
 
 pub const REQUIRED: u8 = 0x0001;
@@ -71,6 +77,8 @@ impl Shared {
             dirty_params: [0; 8],
             dirty_ports: [0; 8],
             control_period_ms: 0,
+            config_len: 0,
+            config: Config([0; 512]),
         }
     }
 
