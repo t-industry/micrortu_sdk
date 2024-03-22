@@ -10,14 +10,11 @@ pub use ie_base::IEBuf;
 pub struct Config(pub [u8; 512]);
 
 /// Shared data between the wasm module and the host.
-#[repr(C)]
+#[repr(C, align(8))]
 #[derive(AsBytes, FromZeroes, FromBytes)]
 pub struct Shared {
-    pub latched_params: [IEBuf; 64],
-    pub latched_ports: [IEBuf; 64],
-
-    pub dirty_params: [u8; 8],
-    pub dirty_ports: [u8; 8],
+    pub latched_params: [u8; 256],
+    pub latched_ports: [u8; 256],
 
     pub control_period_ms: u32,
     pub config_len: u32,
@@ -37,6 +34,7 @@ pub enum ParseError {
     NotEnoughData,
     TooMuchData,
     InvalidData,
+    BadHeader,
     MultiplePointsForSingular,
 }
 
@@ -69,13 +67,9 @@ impl Shared {
     /// Creates a new `Shared` instance with default values.
     #[must_use]
     pub const fn new() -> Self {
-        let iebuf = IEBuf([0; core::mem::size_of::<IEBuf>()]);
-
         Self {
-            latched_params: [iebuf; 64],
-            latched_ports: [iebuf; 64],
-            dirty_params: [0; 8],
-            dirty_ports: [0; 8],
+            latched_params: [0; 256],
+            latched_ports: [0; 256],
             control_period_ms: 0,
             config_len: 0,
             config: Config([0; 512]),

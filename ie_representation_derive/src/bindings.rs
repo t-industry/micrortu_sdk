@@ -176,31 +176,20 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
         let is_single = port.lower_bound == 1 && port.upper_bound == Some(1);
         let is_optional = port.optional;
         let attrs = &port.attrs;
-        let typ = match (mode_str.as_str(), is_optional, is_single) {
-            ("In", true, true) => quote! { ::micrortu_sdk::GetSingleOptional },
-            ("In", false, true) => quote! { ::micrortu_sdk::GetSingle },
-            ("In", true, false) => quote! { ::micrortu_sdk::GetMultipleOptional },
-            ("In", false, false) => quote! { ::micrortu_sdk::GetMultiple },
-
-            ("Out", true, true) => quote! { ::micrortu_sdk::SetSingleOptional },
-            ("Out", false, true) => quote! { ::micrortu_sdk::SetSingle },
-            ("Out", true, false) => quote! { ::micrortu_sdk::SetMultipleOptional },
-            ("Out", false, false) => quote! { ::micrortu_sdk::SetMultiple },
-
-            ("InOut", true, true) => quote! { ::micrortu_sdk::GetSetSingleOptional },
-            ("InOut", false, true) => quote! { ::micrortu_sdk::GetSetSingle },
-            ("InOut", true, false) => quote! { ::micrortu_sdk::GetSetMultipleOptional },
-            ("InOut", false, false) => quote! { ::micrortu_sdk::GetSetMultiple },
-            _ => {
-                return syn::Error::new_spanned(port.mode, format!("Unknown port mode: {mode_str}"))
-                    .to_compile_error()
-                    .into()
-            }
+        let typ = match port.typ {
+            IEType::TI1 => quote! { M_SP_NA_1 },
+            IEType::TI3 => quote! { M_DP_NA_1 },
+            IEType::TI13 => quote! { M_ME_NE_1 },
+            IEType::TI45 => quote! { C_SC_NA_1 },
+            IEType::TI50 => quote! { C_SE_NC_1 },
+            IEType::TI112 => quote! { P_ME_NC_1 },
         };
 
-        names.push(quote! {
-            #(#attrs)*
-            pub #name: #typ<'a>
+        names.push(match (is_single, is_optional) {
+            (true, true) => quote! { #(#attrs)* pub #name: Option<&'a mut #typ> },
+            (true, false) => quote! { #(#attrs)* pub #name: &'a mut #typ },
+            (false, true) => quote! { #(#attrs)* pub #name: Option<&'a mut [#typ]> },
+            (false, false) => quote! { #(#attrs)* pub #name: &'a mut [#typ] },
         });
 
         let min_size = port.lower_bound as u8;
@@ -255,13 +244,21 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
         });
 
         parse_blocks.push(quote! {#name: {
-            let (len, dirty) = ::micrortu_sdk::parse_port(&source, &cursor, &dirty, #is_optional, #min_size, #max_size)?;
-            let (this, new_source) = source.split_at_mut(len);
-            source = new_source
-                .get_mut(1..)
-                .ok_or(::micrortu_sdk::ParseError::NotTerminated)?; // skip null terminator
-            cursor = cursor.wrapping_add(len).wrapping_add(1); // skip null terminator
-            #typ::new(this, dirty)
+            let (pad_len, rest) = header.split_at_mut(2);
+            header = rest;
+            let pad = pad_len[0];
+            let len = pad_len[1];
+            let (data, rest) = source.split_at_mut(pad + len);
+            source = rest;
+            if len < #min_size {
+                return Err(::micrortu_sdk::ParseError::NotEnoughData);
+            }
+            if #max_size.map_or(false, |m| len > m) {
+                return Err(::micrortu_sdk::ParseError::TooMuchData);
+            }
+            let value = <_ as ::zerocopy::FromBytes>::mut_slice_from(&mut data[pad..]);
+            let value = value.ok_or(::micrortu_sdk::ParseError::InvalidData)?;
+            value
           },
         });
     }
@@ -282,16 +279,28 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
         }
     }
 
+    let header_size = parse_blocks.len() * 2;
     let parse = quote! {
-        fn parse(mut source: &'a mut [::micrortu_sdk::IEBuf], dirty: &'a mut [u8; 8])
-            -> Result<Self, ::micrortu_sdk::ParseError>
-        {
-            let dirty = ::core::cell::Cell::from_mut(dirty);
-            let mut cursor = 0;
-            Ok(Self {
-                _marker: ::core::marker::PhantomData,
-                #(#parse_blocks)*
-            })
+        fn parse(mut source: &'a mut [u8]) -> Self {
+            #[inline]
+            fn parse_inner(source: &'a mut [u8]) -> Result<Self, ::micrortu_sdk::ParseError> {
+                if source.len() < #header_size {
+                    return Err(::micrortu_sdk::ParseError::BadHeader);
+                }
+                let (header, mut source) = source.split_at_mut(header_size);
+                Ok(Self {
+                    _marker: ::core::marker::PhantomData,
+                    #(#parse_blocks)*
+                })
+            }
+
+            match parse_inner(source, diry) {
+                Ok(binds) => binds,
+                Err(err) => {
+                    ::micrortu_sdk::error!("Failed to parse bindings: {:?}", err);
+                    ::core::hint::unreachable_unchecked()
+                }
+            }
         }
     };
 

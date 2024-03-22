@@ -1,7 +1,37 @@
 use const_default::ConstDefault;
-use zerocopy::AsBytes;
+use zerocopy::{AsBytes, FromBytes};
 
 use crate::{QualityDescriptor, C_SC_NA_1, C_SE_NC_1, M_DP_NA_1, M_ME_NE_1, M_SP_NA_1, P_ME_NC_1};
+
+pub struct QueryIEType<const TYPECODE: u8>;
+
+pub trait GetIEType {
+    type Out: FromBytes + AsBytes + Into<SmallIE> + PartialEq + Copy + TryFrom<SmallIE>;
+}
+
+impl GetIEType for QueryIEType<1> {
+    type Out = M_SP_NA_1;
+}
+
+impl GetIEType for QueryIEType<3> {
+    type Out = M_DP_NA_1;
+}
+
+impl GetIEType for QueryIEType<13> {
+    type Out = M_ME_NE_1;
+}
+
+impl GetIEType for QueryIEType<45> {
+    type Out = C_SC_NA_1;
+}
+
+impl GetIEType for QueryIEType<50> {
+    type Out = C_SE_NC_1;
+}
+
+impl GetIEType for QueryIEType<112> {
+    type Out = P_ME_NC_1;
+}
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -13,6 +43,102 @@ pub enum SmallIE {
     TI45(C_SC_NA_1) = 45,
     TI50(C_SE_NC_1) = 50,
     TI112(P_ME_NC_1) = 112,
+}
+
+impl From<M_SP_NA_1> for SmallIE {
+    fn from(value: M_SP_NA_1) -> Self {
+        Self::TI1(value)
+    }
+}
+
+impl From<M_DP_NA_1> for SmallIE {
+    fn from(value: M_DP_NA_1) -> Self {
+        Self::TI3(value)
+    }
+}
+
+impl From<M_ME_NE_1> for SmallIE {
+    fn from(value: M_ME_NE_1) -> Self {
+        Self::TI13(value)
+    }
+}
+
+impl From<C_SC_NA_1> for SmallIE {
+    fn from(value: C_SC_NA_1) -> Self {
+        Self::TI45(value)
+    }
+}
+
+impl From<C_SE_NC_1> for SmallIE {
+    fn from(value: C_SE_NC_1) -> Self {
+        Self::TI50(value)
+    }
+}
+
+impl From<P_ME_NC_1> for SmallIE {
+    fn from(value: P_ME_NC_1) -> Self {
+        Self::TI112(value)
+    }
+}
+
+impl TryFrom<SmallIE> for M_SP_NA_1 {
+    type Error = ();
+    fn try_from(value: SmallIE) -> Result<Self, ()> {
+        match value {
+            SmallIE::TI1(it) => Ok(it),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryFrom<SmallIE> for M_DP_NA_1 {
+    type Error = ();
+    fn try_from(value: SmallIE) -> Result<Self, ()> {
+        match value {
+            SmallIE::TI3(it) => Ok(it),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryFrom<SmallIE> for M_ME_NE_1 {
+    type Error = ();
+    fn try_from(value: SmallIE) -> Result<Self, ()> {
+        match value {
+            SmallIE::TI13(it) => Ok(it),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryFrom<SmallIE> for C_SC_NA_1 {
+    type Error = ();
+    fn try_from(value: SmallIE) -> Result<Self, ()> {
+        match value {
+            SmallIE::TI45(it) => Ok(it),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryFrom<SmallIE> for C_SE_NC_1 {
+    type Error = ();
+    fn try_from(value: SmallIE) -> Result<Self, ()> {
+        match value {
+            SmallIE::TI50(it) => Ok(it),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryFrom<SmallIE> for P_ME_NC_1 {
+    type Error = ();
+    fn try_from(value: SmallIE) -> Result<Self, ()> {
+        match value {
+            SmallIE::TI112(it) => Ok(it),
+            _ => Err(()),
+        }
+    }
 }
 
 impl Default for SmallIE {
@@ -72,6 +198,19 @@ impl SmallIE {
             50 => Some(Self::TI50(ConstDefault::DEFAULT)),
             112 => Some(Self::TI112(ConstDefault::DEFAULT)),
             _ => None,
+        }
+    }
+
+    #[must_use]
+    pub const fn align_for_typecode(typecode: u8) -> usize {
+        match typecode {
+            1 => core::mem::align_of::<M_SP_NA_1>(),
+            3 => core::mem::align_of::<M_DP_NA_1>(),
+            13 => core::mem::align_of::<M_ME_NE_1>(),
+            45 => core::mem::align_of::<C_SC_NA_1>(),
+            50 => core::mem::align_of::<C_SE_NC_1>(),
+            112 => core::mem::align_of::<P_ME_NC_1>(),
+            _ => 1,
         }
     }
 
