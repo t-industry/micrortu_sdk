@@ -173,7 +173,7 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
     for port in ports {
         let name = &port.name;
         let mode_str = port.mode.to_string();
-        let is_single = port.lower_bound == 1 && port.upper_bound == Some(1);
+        let is_multiple = port.lower_bound > 1 || port.upper_bound.is_none();
         let is_optional = port.optional;
         let attrs = &port.attrs;
         let typ = match port.typ {
@@ -184,12 +184,13 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             IEType::TI50 => quote! { C_SE_NC_1 },
             IEType::TI112 => quote! { P_ME_NC_1 },
         };
+        let typ = quote! { ::micrortu_sdk::ie_base::#typ };
 
-        names.push(match (is_single, is_optional) {
-            (true, true) => quote! { #(#attrs)* pub #name: Option<&'a mut #typ> },
-            (true, false) => quote! { #(#attrs)* pub #name: &'a mut #typ },
-            (false, true) => quote! { #(#attrs)* pub #name: Option<&'a mut [#typ]> },
-            (false, false) => quote! { #(#attrs)* pub #name: &'a mut [#typ] },
+        names.push(match (is_multiple, is_optional) {
+            (true, true) => quote! { #(#attrs)* pub #name: Option<&'a mut [#typ]> },
+            (true, false) => quote! { #(#attrs)* pub #name: &'a mut [#typ] },
+            (false, true) => quote! { #(#attrs)* pub #name: Option<&'a mut #typ> },
+            (false, false) => quote! { #(#attrs)* pub #name: &'a mut #typ },
         });
 
         let min_size = port.lower_bound as u8;
@@ -243,22 +244,29 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             } }
         });
 
+        let ret = match (is_multiple, is_optional) {
+            (true, true) => quote! { Some(&mut value[..]) },
+            (true, false) => quote! { &mut value[..] },
+            (false, true) => quote! { Some(&mut value[0]) },
+            (false, false) => quote! { &mut value[0] },
+        };
+
         parse_blocks.push(quote! {#name: {
             let (pad_len, rest) = header.split_at_mut(2);
             header = rest;
-            let pad = pad_len[0];
-            let len = pad_len[1];
+            let pad = pad_len[0] as usize;
+            let len = pad_len[1] as usize;
             let (data, rest) = source.split_at_mut(pad + len);
             source = rest;
-            if len < #min_size {
+            if len < #min_size as usize {
                 return Err(::micrortu_sdk::ParseError::NotEnoughData);
             }
-            if #max_size.map_or(false, |m| len > m) {
+            if #max_size.map_or(false, |m: u8| len > m as usize) {
                 return Err(::micrortu_sdk::ParseError::TooMuchData);
             }
-            let value = <_ as ::zerocopy::FromBytes>::mut_slice_from(&mut data[pad..]);
-            let value = value.ok_or(::micrortu_sdk::ParseError::InvalidData)?;
-            value
+            let value = <#typ as ::zerocopy::FromBytes>::mut_slice_from(&mut data[pad..]);
+            let mut value = value.ok_or(::micrortu_sdk::ParseError::InvalidData)?;
+            #ret
           },
         });
     }
@@ -282,23 +290,22 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
     let header_size = parse_blocks.len() * 2;
     let parse = quote! {
         fn parse(mut source: &'a mut [u8]) -> Self {
-            #[inline]
-            fn parse_inner(source: &'a mut [u8]) -> Result<Self, ::micrortu_sdk::ParseError> {
+            fn parse_inner<'b>(source: &'b mut [u8]) -> Result<#struct_name<'b>, ::micrortu_sdk::ParseError> {
                 if source.len() < #header_size {
                     return Err(::micrortu_sdk::ParseError::BadHeader);
                 }
-                let (header, mut source) = source.split_at_mut(header_size);
-                Ok(Self {
+                let (mut header, mut source) = source.split_at_mut(#header_size);
+                Ok(#struct_name {
                     _marker: ::core::marker::PhantomData,
                     #(#parse_blocks)*
                 })
-            }
+            };
 
-            match parse_inner(source, diry) {
+            match parse_inner(source) {
                 Ok(binds) => binds,
                 Err(err) => {
                     ::micrortu_sdk::error!("Failed to parse bindings: {:?}", err);
-                    ::core::hint::unreachable_unchecked()
+                    ::core::arch::wasm32::unreachable()
                 }
             }
         }

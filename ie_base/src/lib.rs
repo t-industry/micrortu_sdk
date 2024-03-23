@@ -11,6 +11,7 @@ pub mod qds;
 pub mod address;
 
 pub mod conversion_impls;
+pub mod query_impls;
 
 pub use small_ie::*;
 pub use iebuf::*;

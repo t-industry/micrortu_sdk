@@ -57,16 +57,6 @@ pub enum DPI {
     Indeterminate2 = 3,
 }
 
-impl From<bool> for DPI {
-    fn from(value: bool) -> Self {
-        if value {
-            Self::On
-        } else {
-            Self::Off
-        }
-    }
-}
-
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
 pub struct DIQ {

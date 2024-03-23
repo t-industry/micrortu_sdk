@@ -116,7 +116,7 @@ impl TryFrom<SmallIE> for u32 {
     fn try_from(value: SmallIE) -> Result<Self, Self::Error> {
         match value {
             SmallIE::TI1(v) => Ok(v.value.spi().into()),
-            SmallIE::TI3(v) => Ok(v.value.dpi() as u32),
+            SmallIE::TI3(v) => Ok(v.value.dpi() as Self),
             SmallIE::TI45(v) => Ok(v.value.scs().into()),
             SmallIE::TI13(_) | SmallIE::TI50(_) | SmallIE::TI112(_) => Err(IEConversionError),
         }
@@ -135,7 +135,7 @@ impl TryFrom<u8> for M_DP_NA_1 {
     type Error = IEConversionError;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
-        Ok(M_DP_NA_1 {
+        Ok(Self {
             value: *DIQ::default().set_dpi(DPI::from_int(value).map_err(|_| IEConversionError)?),
         })
     }
@@ -146,6 +146,16 @@ impl From<f32> for M_ME_NE_1 {
         Self {
             value,
             qds: Default::default(),
+        }
+    }
+}
+
+impl From<bool> for DPI {
+    fn from(value: bool) -> Self {
+        if value {
+            Self::On
+        } else {
+            Self::Off
         }
     }
 }

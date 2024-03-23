@@ -10,6 +10,12 @@ pub struct C_SC_NA_1 {
     pub value: SCO,
 }
 
+impl From<C_SC_NA_1> for bool {
+    fn from(command: C_SC_NA_1) -> Self {
+        command.value.scs()
+    }
+}
+
 /// TI50, `C_SE_NC_1`, Set-point command, short floating point number
 #[repr(C, packed)]
 #[allow(non_camel_case_types)]
