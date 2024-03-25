@@ -1,6 +1,5 @@
 use std::num::NonZeroU8;
 
-use crate::{PARAMS, PORTS};
 use micrortu_build_utils::{Direction, IEType};
 use proc_macro::TokenStream;
 use quote::quote;
@@ -11,6 +10,8 @@ use syn::{
     punctuated::Punctuated,
     Attribute, Ident, LitInt, Meta, MetaList, Token, Visibility,
 };
+
+use crate::state::{set_params, set_ports};
 
 struct Port {
     attrs: Vec<Attribute>,
@@ -272,12 +273,13 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
     }
 
     for block_name in block_names {
-        let crate_name = std::env::var("CARGO_PKG_NAME").unwrap();
-        let store = if is_ports { &PORTS } else { &PARAMS };
-        let mut store = store.lock().expect("poison");
-        let prev = store.insert((block_name.to_string(), crate_name), meta_bindings.clone());
+        let res = if is_ports {
+            set_ports(&block_name, meta_bindings.clone())
+        } else {
+            set_params(&block_name, meta_bindings.clone())
+        };
 
-        if prev.is_some() {
+        if res.is_err() {
             return syn::Error::new_spanned(
                 block_name.clone(),
                 format!("Bindings are already defined for block `{block_name}`"),

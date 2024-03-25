@@ -1,4 +1,3 @@
-use crate::{BLOCKS, BLOCK_CONFIGS, PARAMS, PORTS, STRINGS};
 use micrortu_build_utils::{Block, Direction, IEType, Port};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
@@ -6,6 +5,8 @@ use syn::{
     parse::{Parse, ParseStream},
     parse_macro_input, Ident, Token,
 };
+
+use crate::state::{get_block_conf, get_ports_params, intern_static_string, set_block};
 
 struct RegisterBlockInput {
     block_type: Ident,
@@ -82,31 +83,30 @@ pub fn register_block(input: TokenStream) -> TokenStream {
     let ports_static_name = Ident::new(&format!("PORTS_{block_name}"), block_name.span());
     let params_static_name = Ident::new(&format!("PARAMS_{block_name}"), block_name.span());
 
-    let ports = PORTS.lock().expect("poison");
-    let params = PARAMS.lock().expect("poison");
-    let crate_name = std::env::var("CARGO_PKG_NAME").unwrap();
-    let key = (block_name_str.clone(), crate_name.clone());
-    let Some(ports) = ports.get(&key).cloned() else {
+    let (ports, params) = get_ports_params(&block_name_str);
+    let Some(ports) = ports else {
         return syn::Error::new_spanned(block_name, "Missing ports for block")
             .into_compile_error()
             .into();
     };
-    let Some(params) = params.get(&key).cloned() else {
+    let Some(params) = params else {
         return syn::Error::new_spanned(block_name, "Missing params for block")
             .into_compile_error()
             .into();
     };
-    let krate = std::env::var("CARGO_PKG_NAME").unwrap();
-    let key = (block_name_str.clone(), krate.clone());
     let block = Block {
         name: block_name_str.to_string(),
         description: String::new(),
         semver_requirement: None,
         ports: ports.clone(),
         params: params.clone(),
-        block_conf: BLOCK_CONFIGS.lock().expect("poison").get(&key).cloned(),
+        block_conf: get_block_conf(&block_name_str),
     };
-    BLOCKS.lock().expect("poison").insert(key, block);
+    if set_block(&block_name_str, block).is_err() {
+        return syn::Error::new_spanned(block_name, "Block with that name already exists")
+            .to_compile_error()
+            .into();
+    }
     let ports = to_quote(ports);
     let params = to_quote(params);
 
@@ -140,13 +140,6 @@ pub fn register_block(input: TokenStream) -> TokenStream {
         }
     };
     output.into()
-}
-
-fn intern_static_string(s: &str) -> u16 {
-    let mut strings = STRINGS.lock().expect("poison");
-    let len = strings.len();
-    strings.push_str(s);
-    len.try_into().expect("too many strings interned")
 }
 
 fn to_quote(ports: Vec<Port>) -> impl ToTokens {

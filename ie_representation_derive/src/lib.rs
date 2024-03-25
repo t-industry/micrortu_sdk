@@ -1,16 +1,12 @@
 #![allow(clippy::redundant_closure_for_method_calls)]
 
-use micrortu_build_utils::{Block, BlockConf};
 use proc_macro::TokenStream;
-use std::{
-    collections::BTreeMap,
-    sync::{atomic::AtomicBool, Mutex},
-};
 
 mod bindings;
 mod config;
 mod finalize;
 mod register_block;
+mod state;
 
 /// Finalize the build process.
 /// That macro must be called at the end to embed metadata into the binary.
@@ -47,15 +43,6 @@ pub fn register_block(input: TokenStream) -> TokenStream {
 pub fn derive_config(input: TokenStream) -> TokenStream {
     config::derive_config(input)
 }
-
-static STRINGS: Mutex<String> = Mutex::new(String::new());
-static FINALIZED: AtomicBool = AtomicBool::new(false);
-static BLOCK_CONFIGS: Mutex<BTreeMap<(String, String), BlockConf>> = Mutex::new(BTreeMap::new());
-static BLOCKS: Mutex<BTreeMap<(String, String), Block>> = Mutex::new(BTreeMap::new());
-static PARAMS: Mutex<BTreeMap<(String, String), Vec<micrortu_build_utils::Port>>> =
-    Mutex::new(BTreeMap::new());
-static PORTS: Mutex<BTreeMap<(String, String), Vec<micrortu_build_utils::Port>>> =
-    Mutex::new(BTreeMap::new());
 
 /**
 # Macros for generating parser of arguments block requires.

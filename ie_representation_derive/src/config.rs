@@ -3,7 +3,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Fields, Meta, MetaList, Type};
 
-use crate::{bindings::parse_block_names, BLOCK_CONFIGS};
+use crate::{bindings::parse_block_names, state::set_block_conf};
 
 pub fn derive_config(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -49,20 +49,12 @@ pub fn derive_config(input: TokenStream) -> TokenStream {
     };
 
     let block_conf = BlockConf { fields };
-    let mut confs = BLOCK_CONFIGS.lock().expect("poison");
 
     for block_name in block_names {
-        let krate = std::env::var("CARGO_PKG_NAME").unwrap();
-        let key = (block_name.to_string(), krate.clone());
+        let res = set_block_conf(&block_name, block_conf.clone());
 
-        if confs.keys().any(|k| k == &key) {
+        if res.is_err() {
             return syn::Error::new_spanned(name, "Config with that name already exists")
-                .to_compile_error()
-                .into();
-        }
-
-        if confs.insert(key, block_conf.clone()).is_some() {
-            return syn::Error::new_spanned(name, "Configuration with that name already exists")
                 .to_compile_error()
                 .into();
         }

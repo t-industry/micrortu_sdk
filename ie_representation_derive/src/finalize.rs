@@ -1,21 +1,24 @@
+use std::sync::atomic::AtomicBool;
+
 use micrortu_build_utils::WasmBlobDump;
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::{BLOCKS, FINALIZED, STRINGS};
+use crate::state::{get_blocks, get_interned_strings};
+
+static FINALIZED: AtomicBool = AtomicBool::new(false);
 
 pub fn finalize() -> TokenStream {
     if FINALIZED.swap(true, std::sync::atomic::Ordering::Relaxed) {
         panic!("finalize! can only be called once");
     }
-    let final_string = STRINGS.lock().expect("poison").clone();
-    let blocks = BLOCKS.lock().expect("poison").clone();
+    let final_string = get_interned_strings();
+    let blocks = get_blocks();
     let len = final_string.len();
     let bytes_array = final_string.as_bytes().iter().map(|&b| quote! { #b });
     let bytes_array = quote! { [ #(#bytes_array),* ] };
     let doc = format!(" Collected strings: {final_string:?}");
 
-    let blocks = blocks.values().cloned().collect();
     let metadata = WasmBlobDump { blocks };
 
     let metadata = serde_json::to_string(&metadata).expect("serialization error");
