@@ -256,13 +256,17 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             let (pad_len, rest) = header.split_at_mut(2);
             header = rest;
             let pad = pad_len[0] as usize;
-            let len = pad_len[1] as usize;
-            let (data, rest) = source.split_at_mut(pad + len);
+            let bytes = pad_len[1] as usize;
+            let len = bytes / ::core::mem::size_of::<#typ>();
+            let (data, rest) = source.split_at_mut(pad + bytes);
             source = rest;
             if len < #min_size as usize {
+                ::micrortu_sdk::error!("Got {} elements, expected at least {}", len, #min_size);
                 return Err(::micrortu_sdk::ParseError::NotEnoughData);
             }
             if #max_size.map_or(false, |m: u8| len > m as usize) {
+                let max_size: u8 = #max_size.unwrap();
+                ::micrortu_sdk::error!("Got {} elements, expected at most {}", len, max_size);
                 return Err(::micrortu_sdk::ParseError::TooMuchData);
             }
             let value = <#typ as ::zerocopy::FromBytes>::mut_slice_from(&mut data[pad..]);
