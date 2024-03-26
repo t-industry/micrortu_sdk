@@ -9,7 +9,7 @@ license.workspace = true
 description.workspace = true
 
 [workspace.package]
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 repository = "https://github.com/t-industry/micrortu_sdk"
 keywords = ["wasm", "micrortu", "scripting", "sdk"]
@@ -26,31 +26,31 @@ zerocopy = { version = "0.7.32", features = ["derive"], default-features = false
 [workspace.dependencies.ie_base]
 package = "micrortu_ie_base"
 path = "./ie_base"
-version = "0.2.0"
+version = "0.2.1"
 
 [workspace.dependencies.ie_representation_derive]
 package = "micrortu_ie_representation_derive"
 path = "./ie_representation_derive"
-version = "0.2.0"
+version = "0.2.1"
 
 [workspace.dependencies.wasm_global_shared_data]
 package = "micrortu_wasm_global_shared_data"
 path = "./wasm_global_shared_data"
-version = "0.2.0"
+version = "0.2.1"
 
 [workspace.dependencies.micrortu_build_utils]
 package = "micrortu_build_utils"
 path = "./micrortu_build_utils"
-version = "0.2.0"
+version = "0.2.1"
 
 
 [workspace]
 # Warn: order is important. Those higher in the list should not depend on those lower in the list.
 members = [
   "./ie_base",
+  "./wasm_global_shared_data",
   "./micrortu_build_utils",
   "./ie_representation_derive",
-  "./wasm_global_shared_data",
 ]
 resolver = "2"
 
