@@ -41,14 +41,15 @@ pub enum Direction {
 }
 
 #[derive(Serialize, JsonSchema, Deserialize, Clone, Copy, Debug)]
+#[repr(u8)]
 #[serde(rename_all = "lowercase")]
 pub enum IEType {
-    TI1,
-    TI3,
-    TI13,
-    TI45,
-    TI50,
-    TI112,
+    TI1 = 1,
+    TI3 = 3,
+    TI13 = 13,
+    TI45 = 45,
+    TI50 = 50,
+    TI112 = 112,
 }
 
 #[derive(Serialize, JsonSchema, Validate, Deserialize, Clone, Debug)]

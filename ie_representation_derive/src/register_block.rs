@@ -114,6 +114,7 @@ pub fn register_block(input: TokenStream) -> TokenStream {
     let params = to_quote(params);
 
     let output = quote! {
+        #[cfg(target_arch = "wasm32")]
         mod #module_name {
             use ::micrortu_sdk::{Shared, StepResult, BindingDefinition, FactoryInput};
 

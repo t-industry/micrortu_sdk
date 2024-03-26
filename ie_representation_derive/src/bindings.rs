@@ -198,7 +198,7 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
         let max_size = port
             .upper_bound
             .map_or(quote! { None }, |m| quote! { Some(#m as u8) });
-        let flags = !is_optional as u16;
+        let flags = !is_optional as u8;
 
         let direction = match mode_str.as_str() {
             "In" => Direction::In,
@@ -232,12 +232,14 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             Direction::InOut => quote! { ::micrortu_sdk::IN_OUT },
         };
 
+        let port_typ = port.typ as u8;
         report_blocks.push(quote! { {
             #[cfg(not(target_arch = "wasm32"))] {
                 const NAME: &str = stringify!(#name);
                 ::micrortu_sdk::NativeBindingDefinition::<'static> {
                     name: &NAME,
                     flags: #flags,
+                    typ: #port_typ,
                     min_size: #min_size,
                     max_size: ::core::num::NonZeroU8::new(#to_nonzero_max_size),
                     direction: #direction_quote,
@@ -311,7 +313,12 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
                 Ok(binds) => binds,
                 Err(err) => {
                     ::micrortu_sdk::error!("Failed to parse bindings: {:?}", err);
-                    ::core::arch::wasm32::unreachable()
+                    #[cfg(target_arch = "wasm32")] {
+                        ::core::arch::wasm32::unreachable()
+                    }
+                    #[cfg(not(target_arch = "wasm32"))] {
+                        panic!("Failed to parse bindings: {:?}", err)
+                    }
                 }
             }
         }
