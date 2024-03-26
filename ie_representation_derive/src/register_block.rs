@@ -70,7 +70,10 @@ pub fn register_block(input: TokenStream) -> TokenStream {
             .to_compile_error()
             .into();
     }
-    if block_name_str.chars().any(|c| !c.is_lowercase()) {
+    if block_name_str
+        .chars()
+        .any(|c| c.is_ascii_alphabetic() && !c.is_lowercase())
+    {
         return syn::Error::new_spanned(block_name, "Block name must be all lowercase")
             .to_compile_error()
             .into();
