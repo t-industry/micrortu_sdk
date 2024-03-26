@@ -41,14 +41,12 @@ echo "New version: $NEW_VERSION"
 # Replace the old version with the new version in Cargo.toml for the workspace and its members
 sed -i "s/^version = \"$WORKSPACE_VERSION\"/version = \"$NEW_VERSION\"/g" $CARGO_TOML
 
-exit
-
 # Commit the changes
 git add $CARGO_TOML
 git commit -m "Bump version to $NEW_VERSION"
 
 # Tag the commit
-git tag "v$NEW_VERSION"
+git tag "$NEW_VERSION"
 
 # Push the commit and tags
 git push origin main --tags
