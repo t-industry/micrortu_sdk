@@ -94,28 +94,33 @@ for<'a> extern "C" fn(&'a mut Shared, &'a mut BlockName) -> StepResult;
 
 #![cfg_attr(not(test), no_std)]
 
+#[allow(dead_code)]
+union Exported {
+    shared: ManuallyDrop<Shared>,
+    factory: ManuallyDrop<FactoryInput>,
+}
+
 #[no_mangle]
-static mut SHARED: MaybeUninit<Shared> = MaybeUninit::zeroed();
+static mut SHARED: MaybeUninit<Exported> = MaybeUninit::zeroed();
 
 pub mod bump_allocator;
 mod getters_setters;
 pub mod log;
 pub mod trap_err;
 
-use core::mem::MaybeUninit;
+use core::mem::{ManuallyDrop, MaybeUninit};
 
 pub use getters_setters::*;
 pub use ie_base;
 /// Macros for generating parser of arguments block requires.
-pub use ie_representation_derive::{ports, params, finalize, register_block, Config};
+pub use ie_representation_derive::{finalize, params, ports, register_block, Config};
 
 pub use bump_allocator::BumpAllocator;
 pub use ie_base::IEBuf;
 pub use wasm_global_shared_data::{
-    BindingDefinition, Direction, NativeBindingDefinition, ParseError, Shared, StepResult, IN,
-    IN_OUT, OUT, REQUIRED,
+    BindingDefinition, Direction, FactoryInput, NativeBindingDefinition, ParseError, Shared,
+    StepResult, IN, IN_OUT, OUT, REQUIRED,
 };
-
 
 pub fn init_logger() {}
 
@@ -130,4 +135,4 @@ pub fn wasm_unwrap<T>(v: Option<T>) -> T {
     }
 }
 
-pub trait Config: zerocopy::FromBytes + zerocopy::AsBytes { }
+pub trait Config: zerocopy::FromBytes + zerocopy::AsBytes {}

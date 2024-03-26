@@ -6,8 +6,8 @@ use zerocopy::{AsBytes, FromBytes, FromZeroes};
 pub use ie_base::IEBuf;
 
 #[repr(C, align(8))]
-#[derive(AsBytes, FromZeroes, FromBytes)]
-pub struct Config(pub [u8; 512]);
+#[derive(AsBytes, FromZeroes, FromBytes, Debug)]
+pub struct Config(pub [u8; 504]);
 
 /// Shared data between the wasm module and the host.
 #[repr(C, align(8))]
@@ -15,7 +15,12 @@ pub struct Config(pub [u8; 512]);
 pub struct Shared {
     pub latched_params: [u8; 256],
     pub latched_ports: [u8; 256],
+}
 
+/// Shared data between the wasm module and the host.
+#[repr(C, align(8))]
+#[derive(AsBytes, FromZeroes, FromBytes, Debug)]
+pub struct FactoryInput {
     pub control_period_ms: u32,
     pub config_len: u32,
     pub config: Config
@@ -70,9 +75,6 @@ impl Shared {
         Self {
             latched_params: [0; 256],
             latched_ports: [0; 256],
-            control_period_ms: 0,
-            config_len: 0,
-            config: Config([0; 512]),
         }
     }
 

@@ -112,7 +112,7 @@ pub fn register_block(input: TokenStream) -> TokenStream {
 
     let output = quote! {
         mod #module_name {
-            use ::micrortu_sdk::{Shared, StepResult, BindingDefinition};
+            use ::micrortu_sdk::{Shared, StepResult, BindingDefinition, FactoryInput};
 
             use super::#factory_fn as factory_fn;
             use super::#init_fn as init_fn;
@@ -120,7 +120,7 @@ pub fn register_block(input: TokenStream) -> TokenStream {
             use super::#block_type as _BLOCK_TYPE;
 
             #[no_mangle]
-            extern "C" fn #factory_name(shared: &mut Shared) -> Option<&'static mut _BLOCK_TYPE> {
+            extern "C" fn #factory_name(shared: &FactoryInput) -> Option<&'static mut _BLOCK_TYPE> {
                 factory_fn(shared)
             }
             #[no_mangle]
