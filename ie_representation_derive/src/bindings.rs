@@ -174,7 +174,7 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
     for port in ports {
         let name = &port.name;
         let mode_str = port.mode.to_string();
-        let is_multiple = port.lower_bound > 1 || port.upper_bound.is_none();
+        let is_multiple = port.lower_bound > 1 || port.upper_bound != Some(1);
         let is_optional = port.optional;
         let attrs = &port.attrs;
         let typ = match port.typ {
@@ -297,19 +297,19 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
 
     let header_size = parse_blocks.len() * 2;
     let parse = quote! {
-        fn parse(mut source: &'a mut [u8]) -> Self {
-            fn parse_inner<'b>(source: &'b mut [u8]) -> Result<#struct_name<'b>, ::micrortu_sdk::ParseError> {
-                if source.len() < #header_size {
-                    return Err(::micrortu_sdk::ParseError::BadHeader);
-                }
-                let (mut header, mut source) = source.split_at_mut(#header_size);
-                Ok(#struct_name {
-                    _marker: ::core::marker::PhantomData,
-                    #(#parse_blocks)*
-                })
-            };
+        fn parse_fallible(source: &'a mut [u8]) -> Result<Self, ::micrortu_sdk::ParseError> {
+            if source.len() < #header_size {
+                return Err(::micrortu_sdk::ParseError::BadHeader);
+            }
+            let (mut header, mut source) = source.split_at_mut(#header_size);
+            Ok(#struct_name {
+                _marker: ::core::marker::PhantomData,
+                #(#parse_blocks)*
+            })
+        }
 
-            match parse_inner(source) {
+        fn parse(mut source: &'a mut [u8]) -> Self {
+            match Self::parse_fallible(source) {
                 Ok(binds) => binds,
                 Err(err) => {
                     ::micrortu_sdk::error!("Failed to parse bindings: {:?}", err);

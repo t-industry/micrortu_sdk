@@ -65,11 +65,27 @@ impl uWrite for LogWriter {
     }
 }
 
+#[cfg(not(feature = "home"))]
 #[macro_export]
 macro_rules! log {
     ($level:expr, $($arg:tt)*) => {{
         _ = ::micrortu_sdk::ufmt::uwrite!(::micrortu_sdk::log::LogWriter, $($arg)*);
         ::micrortu_sdk::log::log_emit($level);
+    }}
+}
+
+#[cfg(feature = "home")]
+#[macro_export]
+macro_rules! log {
+    ($level:expr, $($arg:tt)*) => {{
+        match $level {
+            1 => log::error!($($arg)*),
+            2 => log::warn!($($arg)*),
+            3 => log::info!($($arg)*),
+            4 => log::debug!($($arg)*),
+            5 => log::trace!($($arg)*),
+            _ => unreachable!(),
+        }
     }}
 }
 

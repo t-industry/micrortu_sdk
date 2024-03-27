@@ -6,31 +6,45 @@ use crate::{QualityDescriptor, C_SC_NA_1, C_SE_NC_1, M_DP_NA_1, M_ME_NE_1, M_SP_
 pub struct QueryIEType<const TYPECODE: u8>;
 
 pub trait GetIEType {
-    type Out: FromBytes + AsBytes + Into<SmallIE> + PartialEq + Copy + TryFrom<SmallIE>;
+    type Out: FromBytes
+        + AsBytes
+        + Into<SmallIE>
+        + PartialEq
+        + Copy
+        + TryFrom<SmallIE>
+        + core::fmt::Debug
+        + Default;
+    const TYPECODE: u8;
 }
 
 impl GetIEType for QueryIEType<1> {
     type Out = M_SP_NA_1;
+    const TYPECODE: u8 = 1;
 }
 
 impl GetIEType for QueryIEType<3> {
     type Out = M_DP_NA_1;
+    const TYPECODE: u8 = 3;
 }
 
 impl GetIEType for QueryIEType<13> {
     type Out = M_ME_NE_1;
+    const TYPECODE: u8 = 13;
 }
 
 impl GetIEType for QueryIEType<45> {
     type Out = C_SC_NA_1;
+    const TYPECODE: u8 = 45;
 }
 
 impl GetIEType for QueryIEType<50> {
     type Out = C_SE_NC_1;
+    const TYPECODE: u8 = 50;
 }
 
 impl GetIEType for QueryIEType<112> {
     type Out = P_ME_NC_1;
+    const TYPECODE: u8 = 112;
 }
 
 #[repr(u8)]
