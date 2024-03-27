@@ -1,6 +1,7 @@
 #![no_std]
 
 use core::num::NonZeroU8;
+use ufmt::derive::uDebug;
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
 pub use ie_base::IEBuf;
@@ -33,7 +34,7 @@ pub const REQUIRED: u8 = 0x0001;
 /// Indicates misconfiguration of `MicroRTU` or a bug in `ports!` macro or
 /// `MicroRTU` firmware.
 #[repr(u8)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, uDebug)]
 pub enum ParseError {
     NotTerminated,
     NotEnoughData,

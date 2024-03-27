@@ -1,14 +1,37 @@
-use core::fmt::{self, Write};
+use core::convert::Infallible;
 
-struct LogWriter;
-impl Write for LogWriter {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        #[rustfmt::skip]
-        extern "C" {
-            fn log_append(len: u64, b1: u64, b2: u64, b3: u64, b4: u64, b5: u64,
-                b6: u64, b7: u64, b8: u64, b9: u64, b10: u64, b11: u64,
-                b12: u64, b13: u64, b14: u64, b15: u64);
-        }
+use ufmt::uWrite;
+
+#[doc(hidden)]
+pub struct LogWriter;
+
+#[rustfmt::skip]
+#[allow(clippy::too_many_arguments)]
+fn log_append(len: u64, b1: u64, b2: u64, b3: u64, b4: u64, b5: u64,
+    b6: u64, b7: u64, b8: u64, b9: u64, b10: u64, b11: u64,
+    b12: u64, b13: u64, b14: u64, b15: u64) {
+    extern "C" {
+        fn log_append(len: u64, b1: u64, b2: u64, b3: u64, b4: u64, b5: u64,
+            b6: u64, b7: u64, b8: u64, b9: u64, b10: u64, b11: u64,
+            b12: u64, b13: u64, b14: u64, b15: u64);
+    }
+    unsafe {
+        log_append(len, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15)
+    }
+}
+
+#[doc(hidden)]
+pub fn log_emit(level: i64) {
+    extern "C" {
+        fn log_emit(level: i64);
+    }
+    unsafe { log_emit(level) }
+}
+
+impl uWrite for LogWriter {
+    type Error = Infallible;
+
+    fn write_str(&mut self, s: &str) -> Result<(), Self::Error> {
         let mut bytes = s.as_bytes();
 
         while !bytes.is_empty() {
@@ -30,57 +53,53 @@ impl Write for LogWriter {
                 };
             }
 
-            unsafe {
-                #[rustfmt::skip]
-                log_append(
-                    len,
-                    b!(0), b!(1), b!(2), b!(3), b!(4), b!(5), b!(6), b!(7),
-                    b!(8), b!(9), b!(10), b!(11), b!(12), b!(13), b!(14),
-                );
-            }
+            #[rustfmt::skip]
+            log_append(
+                len,
+                b!(0), b!(1), b!(2), b!(3), b!(4), b!(5), b!(6), b!(7),
+                b!(8), b!(9), b!(10), b!(11), b!(12), b!(13), b!(14),
+            );
         }
 
         Ok(())
     }
 }
 
-pub fn log(level: i64, format: &fmt::Arguments) {
-    extern "C" {
-        fn log_emit(level: i64);
-    }
-
-    _ = write!(LogWriter, "{format}");
-
-    unsafe { log_emit(level) };
+#[macro_export]
+macro_rules! log {
+    ($level:expr, $($arg:tt)*) => {{
+        _ = ::micrortu_sdk::ufmt::uwrite!(::micrortu_sdk::log::LogWriter, $($arg)*);
+        ::micrortu_sdk::log::log_emit($level);
+    }}
 }
 
 #[macro_export]
 macro_rules! error {
     ($($arg:tt)*) => {
-        ::micrortu_sdk::log::log(1, &format_args!($($arg)*))
+        ::micrortu_sdk::log!(1, $($arg)*)
     }
 }
 #[macro_export]
 macro_rules! warn {
     ($($arg:tt)*) => {
-        ::micrortu_sdk::log::log(2, &format_args!($($arg)*))
+        ::micrortu_sdk::log!(2, $($arg)*)
     }
 }
 #[macro_export]
 macro_rules! info {
     ($($arg:tt)*) => {
-        ::micrortu_sdk::log::log(3, &format_args!($($arg)*))
+        ::micrortu_sdk::log!(3, $($arg)*)
     }
 }
 #[macro_export]
 macro_rules! debug {
     ($($arg:tt)*) => {
-        ::micrortu_sdk::log::log(4, &format_args!($($arg)*))
+        ::micrortu_sdk::log!(4, &format_args!($($arg)*))
     }
 }
 #[macro_export]
 macro_rules! trace {
     ($($arg:tt)*) => {
-        ::micrortu_sdk::log::log(5, &format_args!($($arg)*))
+        ::micrortu_sdk::log!(5, &format_args!($($arg)*))
     }
 }

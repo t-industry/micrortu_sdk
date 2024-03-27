@@ -140,6 +140,8 @@ pub use wasm_global_shared_data::{
     StepResult, IN, IN_OUT, OUT, REQUIRED,
 };
 
+pub use ufmt;
+
 pub fn init_logger() {}
 
 #[doc(hidden)]

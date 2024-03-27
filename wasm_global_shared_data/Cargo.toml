@@ -13,6 +13,7 @@ description.workspace = true
 [dependencies]
 zerocopy = { workspace = true }
 ie_base = { workspace = true }
+ufmt = "0.2.0"
 
 [lints]
 workspace = true
