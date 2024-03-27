@@ -7,7 +7,9 @@ use validator::Validate;
 use wasm_global_shared_data::{NativeBindingDefinition, REQUIRED};
 
 #[derive(Serialize, JsonSchema, Deserialize, Debug)]
-pub struct WasmBlobDump {
+pub struct WasmMetadata {
+    pub minimum_firmware_version: (u8, u8, u8),
+    pub sdk_version: (u8, u8, u8),
     pub blocks: Vec<Block>,
 }
 

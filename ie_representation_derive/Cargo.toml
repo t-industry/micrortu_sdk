@@ -18,6 +18,7 @@ quote = "1.0"
 micrortu_build_utils = { workspace = true }
 syn = "2.0"
 serde_json = "1.0.114"
+semver = "1.0.22"
 
 [lints]
 workspace = true

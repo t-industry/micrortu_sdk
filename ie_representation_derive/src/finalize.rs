@@ -1,12 +1,15 @@
 use std::sync::atomic::AtomicBool;
 
-use micrortu_build_utils::WasmBlobDump;
+use micrortu_build_utils::WasmMetadata;
 use proc_macro::TokenStream;
 use quote::quote;
+use semver::Version;
 
 use crate::state::{get_blocks, get_interned_strings};
 
 static FINALIZED: AtomicBool = AtomicBool::new(false);
+
+const MINIMUM_FIRMWARE_VERSION: (u8, u8, u8) = (0, 0, 0);
 
 pub fn finalize() -> TokenStream {
     if FINALIZED.swap(true, std::sync::atomic::Ordering::Relaxed) {
@@ -19,7 +22,18 @@ pub fn finalize() -> TokenStream {
     let bytes_array = quote! { [ #(#bytes_array),* ] };
     let doc = format!(" Collected strings: {final_string:?}");
 
-    let metadata = WasmBlobDump { blocks };
+    let sdk_version = Version::parse(env!("CARGO_PKG_VERSION")).expect("invalid version");
+    let sdk_version = (
+        sdk_version.major as u8,
+        sdk_version.minor as u8,
+        sdk_version.patch as u8,
+    );
+
+    let metadata = WasmMetadata {
+        minimum_firmware_version: MINIMUM_FIRMWARE_VERSION,
+        sdk_version,
+        blocks,
+    };
 
     let metadata = serde_json::to_string(&metadata).expect("serialization error");
     let metadata_len = metadata.len();
