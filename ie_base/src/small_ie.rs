@@ -12,6 +12,7 @@ pub trait GetIEType {
         + PartialEq
         + Copy
         + TryFrom<SmallIE>
+        + TryFrom<f32>
         + core::fmt::Debug
         + Default;
     const TYPECODE: u8;
@@ -46,6 +47,13 @@ impl GetIEType for QueryIEType<112> {
     type Out = P_ME_NC_1;
     const TYPECODE: u8 = 112;
 }
+
+pub type TI1 = M_SP_NA_1;
+pub type TI3 = M_DP_NA_1;
+pub type TI13 = M_ME_NE_1;
+pub type TI45 = C_SC_NA_1;
+pub type TI50 = C_SE_NC_1;
+pub type TI112 = P_ME_NC_1;
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq)]

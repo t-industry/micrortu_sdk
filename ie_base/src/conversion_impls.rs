@@ -1,10 +1,12 @@
 use int_enum::{IntEnum, IntEnumError};
-use num::{Num, ToPrimitive};
+use num::{Float, Num, ToPrimitive};
 
 use crate::qds::QualityDescriptorHolder;
 
 use crate::{measurement::DPI, IEConversionError, SmallIE, TryUpdateFrom};
-use crate::{C_SC_NA_1, C_SE_NC_1, DIQ, M_DP_NA_1, M_ME_NE_1, M_SP_NA_1, QOS, SIQ};
+use crate::{
+    C_SC_NA_1, C_SE_NC_1, DIQ, M_DP_NA_1, M_ME_NE_1, M_SP_NA_1, P_ME_NC_1, QOS, SIQ, TI1, TI112, TI13, TI3, TI45, TI50
+};
 
 impl<T: IntEnum> From<IntEnumError<T>> for IEConversionError {
     fn from(_value: IntEnumError<T>) -> Self {
@@ -89,6 +91,86 @@ impl TryUpdateFrom<Self> for SmallIE {
             _ => return Err(IEConversionError),
         }
 
+        Ok(())
+    }
+}
+
+impl TryUpdateFrom<SmallIE> for TI1 {
+    type Error = IEConversionError;
+
+    fn try_update_from(&mut self, value: SmallIE) -> Result<(), Self::Error> {
+        match value {
+            SmallIE::TI1(ie) => *self = ie,
+            SmallIE::TI3(ie) => {
+                *self.value.mut_qds_raw() = ie.value.qds_raw();
+                self.value.set_spi(ie.value.dpi() == DPI::On);
+            }
+            _ => return Err(IEConversionError),
+        }
+        Ok(())
+    }
+}
+
+impl TryUpdateFrom<SmallIE> for TI3 {
+    type Error = IEConversionError;
+
+    fn try_update_from(&mut self, value: SmallIE) -> Result<(), Self::Error> {
+        match value {
+            SmallIE::TI3(ie) => *self = ie,
+            SmallIE::TI1(ie_src) => {
+                *self.value.mut_qds_raw() = ie_src.value.qds_raw();
+                self.value.set_dpi(ie_src.value.spi().into());
+            }
+            _ => return Err(IEConversionError),
+        }
+        Ok(())
+    }
+}
+
+impl TryUpdateFrom<SmallIE> for TI13 {
+    type Error = IEConversionError;
+
+    fn try_update_from(&mut self, value: SmallIE) -> Result<(), Self::Error> {
+        match value {
+            SmallIE::TI13(ie) => *self = ie,
+            _ => return Err(IEConversionError),
+        }
+        Ok(())
+    }
+}
+
+impl TryUpdateFrom<SmallIE> for TI45 {
+    type Error = IEConversionError;
+
+    fn try_update_from(&mut self, value: SmallIE) -> Result<(), Self::Error> {
+        match value {
+            SmallIE::TI45(ie) => *self = ie,
+            _ => return Err(IEConversionError),
+        }
+        Ok(())
+    }
+}
+
+impl TryUpdateFrom<SmallIE> for TI50 {
+    type Error = IEConversionError;
+
+    fn try_update_from(&mut self, value: SmallIE) -> Result<(), Self::Error> {
+        match value {
+            SmallIE::TI50(ie) => *self = ie,
+            _ => return Err(IEConversionError),
+        }
+        Ok(())
+    }
+}
+
+impl TryUpdateFrom<SmallIE> for TI112 {
+    type Error = IEConversionError;
+
+    fn try_update_from(&mut self, value: SmallIE) -> Result<(), Self::Error> {
+        match value {
+            SmallIE::TI112(ie) => *self = ie,
+            _ => return Err(IEConversionError),
+        }
         Ok(())
     }
 }
@@ -179,5 +261,45 @@ impl From<bool> for DPI {
         } else {
             Self::Off
         }
+    }
+}
+
+impl TryFrom<f32> for M_SP_NA_1 {
+    type Error = IEConversionError;
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        if value.fract() != 0.0 || !(0.0..=1.0).contains(&value) {
+            return Err(IEConversionError);
+        }
+        Ok(Self::from(value != 0.0))
+    }
+}
+
+impl TryFrom<f32> for M_DP_NA_1 {
+    type Error = IEConversionError;
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        if value.fract() != 0.0 || !(0.0..=255.0).contains(&value) {
+            return Err(IEConversionError);
+        }
+        Self::try_from(value as u8)
+    }
+}
+
+impl TryFrom<f32> for C_SC_NA_1 {
+    type Error = IEConversionError;
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        if value.fract() != 0.0 || !(0.0..=1.0).contains(&value) {
+            return Err(IEConversionError);
+        }
+        Ok(Self::from(value != 0.0))
+    }
+}
+
+impl TryFrom<f32> for P_ME_NC_1 {
+    type Error = IEConversionError;
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        Ok(Self {
+            value,
+            qpm: Default::default(),
+        })
     }
 }
