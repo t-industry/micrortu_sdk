@@ -159,8 +159,13 @@ fn to_quote(ports: Vec<Port>) -> impl ToTokens {
             IEType::TI3 => 3,
             IEType::TI13 => 13,
             IEType::TI45 => 45,
+            IEType::TI49 => 49,
             IEType::TI50 => 50,
             IEType::TI112 => 112,
+            IEType::TI136 => 136,
+            IEType::TI137 => 137,
+            IEType::TI138 => 138,
+            IEType::TI139 => 139,
         };
         let direction_quote = match port.direction {
             Direction::In => quote! { ::micrortu_sdk::IN },

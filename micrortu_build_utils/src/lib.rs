@@ -50,8 +50,13 @@ pub enum IEType {
     TI3 = 3,
     TI13 = 13,
     TI45 = 45,
+    TI49 = 49,
     TI50 = 50,
     TI112 = 112,
+    TI136 = 136,
+    TI137 = 137,
+    TI138 = 138,
+    TI139 = 139,
 }
 
 #[derive(Serialize, JsonSchema, Validate, Deserialize, Clone, Debug)]
@@ -77,8 +82,13 @@ impl TryFrom<u8> for IEType {
             3 => Ok(Self::TI3),
             13 => Ok(Self::TI13),
             45 => Ok(Self::TI45),
+            49 => Ok(Self::TI49),
             50 => Ok(Self::TI50),
             112 => Ok(Self::TI112),
+            136 => Ok(Self::TI136),
+            137 => Ok(Self::TI137),
+            138 => Ok(Self::TI138),
+            139 => Ok(Self::TI139),
             _ => Err(ConvertError),
         }
     }
