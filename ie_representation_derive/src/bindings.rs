@@ -21,11 +21,13 @@ struct Port {
     lower_bound: usize,
     upper_bound: Option<usize>,
     optional: bool,
+    errors: Vec<syn::Error>,
 }
 
 impl Parse for Port {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let attrs = input.call(Attribute::parse_outer)?;
+        let mut errors = vec![];
         let name: Ident = input.parse()?;
         input.parse::<Token![:]>()?;
         let typ: Ident = input.parse()?;
@@ -37,10 +39,11 @@ impl Parse for Port {
             "TI50" => IEType::TI50,
             "TI112" => IEType::TI112,
             _ => {
-                return Err(syn::Error::new(
+                errors.push(syn::Error::new(
                     typ.span(),
-                    "Unknown type. Supported types are TI1, TI3, TI13, TI45, TI50, TI112",
-                ))
+                    "Unknown type. Supported types are TI1, TI3, TI13, TI45, TI49, TI50, TI112, TI136, TI137, TI138, TI139",
+                    ));
+                IEType::TI1
             }
         };
         let mode: Ident = input.parse()?;
@@ -48,7 +51,7 @@ impl Parse for Port {
         let left: LitInt = input.parse()?;
         let lower_bound = left.base10_parse::<usize>()?;
         if lower_bound == 0 {
-            return Err(syn::Error::new(
+            errors.push(syn::Error::new(
                 left.span(),
                 "Lower bound must be greater than zero",
             ));
@@ -59,7 +62,7 @@ impl Parse for Port {
             Ok(right) => {
                 let upper_bound = right.base10_parse::<usize>()?;
                 if upper_bound == 0 {
-                    return Err(syn::Error::new(
+                    errors.push(syn::Error::new(
                         right.span(),
                         "Upper bound must be greater than zero",
                     ));
@@ -70,7 +73,7 @@ impl Parse for Port {
         };
 
         if lower_bound > upper_bound.unwrap_or(lower_bound) {
-            return Err(syn::Error::new(
+            errors.push(syn::Error::new(
                 left.span(),
                 "Upper bound must be greater than or equal to lower bound",
             ));
@@ -86,6 +89,7 @@ impl Parse for Port {
             lower_bound,
             upper_bound,
             optional,
+            errors,
         })
     }
 }
@@ -170,8 +174,10 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
     let mut parse_blocks = vec![];
     let mut names = vec![];
     let mut meta_bindings = vec![];
+    let mut errors = vec![];
 
     for port in ports {
+        errors.extend(port.errors);
         let name = &port.name;
         let mode_str = port.mode.to_string();
         let is_multiple = port.lower_bound > 1 || port.upper_bound != Some(1);
@@ -205,9 +211,11 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             "Out" => Direction::Out,
             "InOut" => Direction::InOut,
             _ => {
-                return syn::Error::new_spanned(port.mode, format!("Unknown port mode: {mode_str}"))
-                    .to_compile_error()
-                    .into()
+                errors.push(syn::Error::new_spanned(
+                    port.mode,
+                    format!("Unknown port mode: {mode_str}"),
+                ));
+                Direction::In
             }
         };
 
@@ -219,7 +227,7 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             description: String::new(),
             direction,
             required: !is_optional,
-            min: NonZeroU8::new(min_size).unwrap(),
+            min: NonZeroU8::new(min_size).unwrap_or(NonZeroU8::MIN), // will be compiler error
             max: port.upper_bound.and_then(|m| NonZeroU8::new(m as u8)),
         };
 
@@ -286,12 +294,10 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
         };
 
         if res.is_err() {
-            return syn::Error::new_spanned(
+            errors.push(syn::Error::new_spanned(
                 block_name.clone(),
                 format!("Bindings are already defined for block `{block_name}`"),
-            )
-            .to_compile_error()
-            .into();
+            ));
         }
     }
 
@@ -339,8 +345,11 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
         krate = env!("CARGO_PKG_NAME")
     );
     let impl_doc_comment = quote!(#[doc=#impl_comment]);
+    let errors = errors.iter().map(|e| e.to_compile_error());
 
     let expanded = quote! {
+        #(#errors)*
+
         #impl_doc_comment
         #(#attrs)*
         #[derive(Debug)]
