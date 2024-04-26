@@ -43,12 +43,12 @@ impl Eq for RawQualityDescriptor {}
 #[macro_export]
 macro_rules! impl_qds_for {
     ($T:ty) => {
-        impl $crate::QualityDescriptorHolder for $T {
-            fn qds_raw(&self) -> $crate::RawQualityDescriptor {
-                return self.raw;
+        impl $crate::qds::QualityDescriptorHolder for $T {
+            fn qds_raw(&self) -> $crate::qds::RawQualityDescriptor {
+                self.raw
             }
-            fn mut_qds_raw(&mut self) -> &mut $crate::RawQualityDescriptor {
-                return &mut self.raw;
+            fn mut_qds_raw(&mut self) -> &mut $crate::qds::RawQualityDescriptor {
+                &mut self.raw
             }
         }
     };
