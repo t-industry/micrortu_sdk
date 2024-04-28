@@ -26,7 +26,7 @@ pub enum KPA {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromBytes, FromZeroes)]
-pub struct QPM(u8);
+pub struct QPM(pub u8);
 
 // this is a cbindgen-friendly way of generating bitfield accessors
 // cbindgen can't eat bitfield! macro directly

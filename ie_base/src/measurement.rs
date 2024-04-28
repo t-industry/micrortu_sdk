@@ -67,10 +67,10 @@ impl_qds_for!(DIQ);
 impl DIQ {
     #[must_use]
     pub fn dpi(&self) -> DPI {
-        DPI::from_int(self.raw.bit_range(1, 0)).unwrap()
+        DPI::try_from(self.raw.bit_range(1, 0)).unwrap()
     }
     pub fn set_dpi(&mut self, value: DPI) -> &mut Self {
-        self.raw.set_bit_range(1, 0, value.int_value());
+        self.raw.set_bit_range(1, 0, u8::from(value));
         self
     }
 }
