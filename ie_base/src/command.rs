@@ -61,7 +61,7 @@ pub struct C_SE_NC_1 {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromBytes, FromZeroes)]
-pub struct SCO(u8);
+pub struct SCO(pub u8);
 
 bitfield_bitrange! {struct SCO(u8)}
 impl SCO {
@@ -102,7 +102,7 @@ impl_qoc_for!(DCO);
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromBytes, FromZeroes)]
-pub struct QOS(u8);
+pub struct QOS(pub u8);
 
 bitfield_bitrange! {struct QOS(u8)}
 impl QOS {
