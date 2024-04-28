@@ -1,18 +1,12 @@
-use int_enum::{IntEnum, IntEnumError};
 use num::{Float, Num, ToPrimitive};
 
 use crate::qds::QualityDescriptorHolder;
 
 use crate::{measurement::DPI, IEConversionError, SmallIE, TryUpdateFrom};
 use crate::{
-    C_SC_NA_1, C_SE_NC_1, DIQ, M_DP_NA_1, M_ME_NE_1, M_SP_NA_1, P_ME_NC_1, QOS, SIQ, TI1, TI112, TI13, TI3, TI45, TI50
+    C_SC_NA_1, C_SE_NC_1, DIQ, M_DP_NA_1, M_ME_NE_1, M_SP_NA_1, P_ME_NC_1, QOS, SIQ, TI1, TI112,
+    TI13, TI3, TI45, TI50,
 };
-
-impl<T: IntEnum> From<IntEnumError<T>> for IEConversionError {
-    fn from(_value: IntEnumError<T>) -> Self {
-        Self
-    }
-}
 
 impl<T: Num + ToPrimitive> TryUpdateFrom<T> for SmallIE {
     type Error = IEConversionError;
@@ -23,8 +17,10 @@ impl<T: Num + ToPrimitive> TryUpdateFrom<T> for SmallIE {
                 ie.value.set_spi(!value.is_zero());
             }
             Self::TI3(ie) => {
-                ie.value
-                    .set_dpi(DPI::from_int(value.to_u8().ok_or(IEConversionError)?)?);
+                ie.value.set_dpi(
+                    DPI::try_from(value.to_u8().ok_or(IEConversionError)?)
+                        .map_err(|_| IEConversionError)?,
+                );
             }
             Self::TI13(ie) => {
                 ie.value = value.to_f32().ok_or(IEConversionError)?;
@@ -240,7 +236,7 @@ impl TryFrom<u8> for M_DP_NA_1 {
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         Ok(Self {
-            value: *DIQ::default().set_dpi(DPI::from_int(value).map_err(|_| IEConversionError)?),
+            value: *DIQ::default().set_dpi(DPI::try_from(value).map_err(|_| IEConversionError)?),
         })
     }
 }
