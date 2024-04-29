@@ -1,13 +1,30 @@
+use core::str::FromStr;
+
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
 #[repr(C, packed)]
 #[derive(Copy, Clone, Debug, PartialEq, Default, AsBytes, FromZeroes, FromBytes)]
 pub struct CA(pub u8, pub u8);
 
-impl core::fmt::Display for CA {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "CA({}.{})", self.0, self.1)
+#[repr(C, packed)]
+#[derive(Copy, Clone, Debug, PartialEq, Default, AsBytes, FromZeroes, FromBytes)]
+pub struct IOA(pub u8, pub u8, pub u8);
+
+#[derive(Debug)]
+pub struct ParseError;
+
+fn parse_dot_separated<const N: usize>(src: &str) -> Result<[u8; N], ParseError> {
+    let mut res = [0u8; N];
+
+    if src.split('.').count() != N {
+        return Err(ParseError);
     }
+
+    for (dst, src) in res.iter_mut().zip(src.split('.')) {
+        *dst = src.parse().map_err(|_| ParseError)?;
+    }
+
+    Ok(res)
 }
 
 impl CA {
@@ -21,10 +38,6 @@ impl CA {
         filter.is_broadcast() || *self == filter
     }
 }
-
-#[repr(C, packed)]
-#[derive(Copy, Clone, Debug, PartialEq, Default, AsBytes, FromZeroes, FromBytes)]
-pub struct IOA(pub u8, pub u8, pub u8);
 
 impl IOA {
     #[must_use]
@@ -47,8 +60,33 @@ impl IOA {
     }
 }
 
+impl FromStr for CA {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let [a, b] = parse_dot_separated(s)?;
+        Ok(Self(a, b))
+    }
+}
+
+impl FromStr for IOA {
+    type Err = ParseError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let [a, b, c] = parse_dot_separated(s)?;
+        Ok(Self(a, b, c))
+    }
+}
+
+
 impl core::fmt::Display for IOA {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "IOA({}.{}.{})", self.0, self.1, self.2)
     }
 }
+
+impl core::fmt::Display for CA {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "CA({}.{})", self.0, self.1)
+    }
+}
+
