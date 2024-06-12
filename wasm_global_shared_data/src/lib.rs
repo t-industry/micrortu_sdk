@@ -12,7 +12,7 @@ pub struct Config(pub [u8; 504]);
 
 /// Shared data between the wasm module and the host.
 #[repr(C, align(8))]
-#[derive(AsBytes, FromZeroes, FromBytes)]
+#[derive(AsBytes, FromZeroes, FromBytes, Debug)]
 pub struct Shared {
     pub latched_params: [u8; 256],
     pub latched_ports: [u8; 256],
