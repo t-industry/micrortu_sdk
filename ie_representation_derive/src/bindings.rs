@@ -34,6 +34,7 @@ impl Parse for Port {
         let typ = match typ.to_string().as_str() {
             "TI1" => IEType::TI1,
             "TI3" => IEType::TI3,
+            "TI11" => IEType::TI11,
             "TI13" => IEType::TI13,
             "TI45" => IEType::TI45,
             "TI49" => IEType::TI49,
@@ -43,10 +44,14 @@ impl Parse for Port {
             "TI137" => IEType::TI137,
             "TI138" => IEType::TI138,
             "TI139" => IEType::TI139,
+            "TI200" => IEType::TI200,
+            "TI201" => IEType::TI201,
+            "TI202" => IEType::TI202,
+            "TI203" => IEType::TI203,
             _ => {
                 errors.push(syn::Error::new(
                     typ.span(),
-                    "Unknown type. Supported types are TI1, TI3, TI13, TI45, TI49, TI50, TI112, TI136, TI137, TI138, TI139",
+                    "Unknown type. Supported types are TI1, TI3, TI11, TI13, TI45, TI49, TI50, TI112, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203",
                     ));
                 IEType::TI1
             }
@@ -191,20 +196,20 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
         let typ = match port.typ {
             IEType::TI1 => quote! { M_SP_NA_1 },
             IEType::TI3 => quote! { M_DP_NA_1 },
+            IEType::TI11 => quote! { M_ME_NB_1 },
             IEType::TI13 => quote! { M_ME_NE_1 },
             IEType::TI45 => quote! { C_SC_NA_1 },
-            #[allow(clippy::match_same_arms)]
-            IEType::TI49 => quote! { M_SP_NA_1 },
+            IEType::TI49 => quote! { C_SE_NB_1 },
             IEType::TI50 => quote! { C_SE_NC_1 },
             IEType::TI112 => quote! { P_ME_NC_1 },
-            #[allow(clippy::match_same_arms)]
-            IEType::TI136 => quote! { M_SP_NA_1 },
-            #[allow(clippy::match_same_arms)]
-            IEType::TI137 => quote! { M_SP_NA_1 },
-            #[allow(clippy::match_same_arms)]
-            IEType::TI138 => quote! { M_SP_NA_1 },
-            #[allow(clippy::match_same_arms)]
-            IEType::TI139 => quote! { M_SP_NA_1 },
+            IEType::TI136 => quote! { TI136 },
+            IEType::TI137 => quote! { TI137 },
+            IEType::TI138 => quote! { TI138 },
+            IEType::TI139 => quote! { TI139 },
+            IEType::TI200 => quote! { TI200 },
+            IEType::TI201 => quote! { TI201 },
+            IEType::TI202 => quote! { TI202 },
+            IEType::TI203 => quote! { TI203 },
         };
         let typ = quote! { ::micrortu_sdk::ie_base::#typ };
 

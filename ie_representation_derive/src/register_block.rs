@@ -1,4 +1,4 @@
-use micrortu_build_utils::{Block, Direction, IEType, Port};
+use micrortu_build_utils::{Block, Direction, Port};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{
@@ -154,19 +154,7 @@ fn to_quote(ports: Vec<Port>) -> impl ToTokens {
         let flags = port.required as u8;
         let min_size = port.min.get();
         let to_nonzero_max_size = port.max.map_or(0, |m| m.get());
-        let typ = match port.typ {
-            IEType::TI1 => 1u8,
-            IEType::TI3 => 3,
-            IEType::TI13 => 13,
-            IEType::TI45 => 45,
-            IEType::TI49 => 49,
-            IEType::TI50 => 50,
-            IEType::TI112 => 112,
-            IEType::TI136 => 136,
-            IEType::TI137 => 137,
-            IEType::TI138 => 138,
-            IEType::TI139 => 139,
-        };
+        let typ = port.typ as u8;
         let direction_quote = match port.direction {
             Direction::In => quote! { ::micrortu_sdk::IN },
             Direction::Out => quote! { ::micrortu_sdk::OUT },

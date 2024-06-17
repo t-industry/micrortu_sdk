@@ -2,8 +2,9 @@ use num::{Float, Num, ToPrimitive};
 
 use crate::{
     measurement::DPI, qds::QualityDescriptorHolder, IEConversionError, SmallIE, TryUpdateFrom,
-    C_SC_NA_1, C_SE_NC_1, DIQ, M_DP_NA_1, M_ME_NB_1, M_ME_NE_1, M_SP_NA_1, P_ME_NC_1, SIQ, TI1,
-    TI11, TI112, TI13, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203, TI3, TI45, TI50,
+    C_SC_NA_1, C_SE_NB_1, C_SE_NC_1, DIQ, M_DP_NA_1, M_ME_NB_1, M_ME_NE_1, M_SP_NA_1, P_ME_NC_1,
+    SIQ, TI1, TI11, TI112, TI13, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203, TI3, TI45,
+    TI50, TI49,
 };
 
 impl<T: Num + ToPrimitive> TryUpdateFrom<T> for SmallIE {
@@ -21,6 +22,7 @@ impl<T: Num + ToPrimitive> TryUpdateFrom<T> for SmallIE {
             Self::TI11(ie) => ie.value = value.to_f32().ok_or(IEConversionError)? as i16,
             Self::TI13(ie) => ie.value = value.to_f32().ok_or(IEConversionError)?,
             Self::TI45(ie) => ie.value.set_scs(!value.is_zero()),
+            Self::TI49(ie) => ie.value = value.to_f32().ok_or(IEConversionError)? as i16,
             Self::TI50(ie) => ie.value = value.to_f32().ok_or(IEConversionError)?,
             Self::TI112(ie) => ie.value = value.to_f32().ok_or(IEConversionError)?,
             Self::TI136(ie) => ie.value = value.to_f32().ok_or(IEConversionError)? as _,
@@ -57,6 +59,7 @@ impl From<SmallIE> for f32 {
                     0.0
                 }
             }
+            SmallIE::TI49(ie) => ie.value as _,
             SmallIE::TI50(ie) => ie.value,
             SmallIE::TI112(ie) => ie.value,
             SmallIE::TI136(ie) => ie.value as _,
@@ -89,6 +92,7 @@ impl TryUpdateFrom<Self> for SmallIE {
             (Self::TI11(ie), Self::TI11(ie_src)) => *ie = ie_src,
             (Self::TI13(ie), Self::TI13(ie_src)) => *ie = ie_src,
             (Self::TI45(ie), Self::TI45(ie_src)) => *ie = ie_src,
+            (Self::TI49(ie), Self::TI49(ie_src)) => *ie = ie_src,
             (Self::TI50(ie), Self::TI50(ie_src)) => *ie = ie_src,
             (Self::TI112(ie), Self::TI112(ie_src)) => *ie = ie_src,
             (Self::TI136(ie), Self::TI136(ie_src)) => *ie = ie_src,
@@ -157,7 +161,7 @@ macro_rules! try_update_from_smie {
 }
 
 try_update_from_smie!(
-    TI11, TI13, TI45, TI50, TI112, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203,
+    TI11, TI13, TI45, TI49, TI50, TI112, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203,
 );
 
 impl TryFrom<SmallIE> for bool {
@@ -178,7 +182,6 @@ impl TryFrom<SmallIE> for bool {
 }
 
 impl TryFrom<SmallIE> for u32 {
-
     type Error = IEConversionError;
     #[allow(clippy::useless_conversion)]
     fn try_from(value: SmallIE) -> Result<Self, Self::Error> {
@@ -186,6 +189,7 @@ impl TryFrom<SmallIE> for u32 {
             SmallIE::TI1(v) => Ok(v.value.spi().into()),
             SmallIE::TI3(v) => Ok(v.value.dpi() as Self),
             SmallIE::TI45(v) => Ok(v.value.scs().into()),
+            SmallIE::TI49(v) => v.value.try_into().map_err(|_| IEConversionError),
             SmallIE::TI11(v) => v.value.try_into().map_err(|_| IEConversionError),
             SmallIE::TI136(v) => v.value.try_into().map_err(|_| IEConversionError),
             SmallIE::TI137(v) => v.value.try_into().map_err(|_| IEConversionError),
@@ -288,6 +292,6 @@ macro_rules! impl_from_for_ie {
 }
 
 impl_from_for_ie!(
-    M_ME_NE_1, C_SE_NC_1, M_ME_NB_1, P_ME_NC_1, TI136, TI137, TI138, TI139, TI200, TI201, TI202,
-    TI203,
+    M_ME_NE_1, C_SE_NB_1, C_SE_NC_1, M_ME_NB_1, P_ME_NC_1, TI136, TI137, TI138, TI139, TI200,
+    TI201, TI202, TI203,
 );

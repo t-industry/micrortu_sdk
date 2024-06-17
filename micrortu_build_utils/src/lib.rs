@@ -48,6 +48,7 @@ pub enum Direction {
 pub enum IEType {
     TI1 = 1,
     TI3 = 3,
+    TI11 = 11,
     TI13 = 13,
     TI45 = 45,
     TI49 = 49,
@@ -57,6 +58,10 @@ pub enum IEType {
     TI137 = 137,
     TI138 = 138,
     TI139 = 139,
+    TI200 = 200,
+    TI201 = 201,
+    TI202 = 202,
+    TI203 = 203,
 }
 
 #[derive(Serialize, JsonSchema, Validate, Deserialize, Clone, Debug)]
@@ -80,6 +85,7 @@ impl TryFrom<u8> for IEType {
         match value {
             1 => Ok(Self::TI1),
             3 => Ok(Self::TI3),
+            11 => Ok(Self::TI11),
             13 => Ok(Self::TI13),
             45 => Ok(Self::TI45),
             49 => Ok(Self::TI49),
@@ -89,6 +95,10 @@ impl TryFrom<u8> for IEType {
             137 => Ok(Self::TI137),
             138 => Ok(Self::TI138),
             139 => Ok(Self::TI139),
+            200 => Ok(Self::TI200),
+            201 => Ok(Self::TI201),
+            202 => Ok(Self::TI202),
+            203 => Ok(Self::TI203),
             _ => Err(ConvertError),
         }
     }

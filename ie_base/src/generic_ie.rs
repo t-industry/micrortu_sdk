@@ -2,7 +2,7 @@ use const_default::ConstDefault;
 use zerocopy::{AsBytes, FromBytes};
 
 use crate::{
-    SmallIE, C_SC_NA_1, C_SE_NC_1, M_DP_NA_1, M_ME_NB_1, M_ME_NE_1, M_SP_NA_1, P_ME_NC_1, TI136,
+    SmallIE, C_SC_NA_1, C_SE_NB_1, C_SE_NC_1, M_DP_NA_1, M_ME_NB_1, M_ME_NE_1, M_SP_NA_1, P_ME_NC_1, TI136,
     TI137, TI138, TI139, TI200, TI201, TI202, TI203,
 };
 
@@ -48,6 +48,7 @@ impl_qie! {
     M_ME_NB_1 => 11,
     M_ME_NE_1 => 13,
     C_SC_NA_1 => 45,
+    C_SE_NB_1 => 49,
     C_SE_NC_1 => 50,
     P_ME_NC_1 => 112,
     TI136 => 136,

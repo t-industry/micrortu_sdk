@@ -1,8 +1,8 @@
 use const_default::ConstDefault;
 
 use crate::{
-    generic_ie::IEMeta, QualityDescriptor, C_SC_NA_1, C_SE_NC_1, M_DP_NA_1, M_ME_NB_1, M_ME_NE_1,
-    M_SP_NA_1, P_ME_NC_1, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203,
+    generic_ie::IEMeta, QualityDescriptor, C_SC_NA_1, C_SE_NB_1, C_SE_NC_1, M_DP_NA_1, M_ME_NB_1,
+    M_ME_NE_1, M_SP_NA_1, P_ME_NC_1, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203,
 };
 
 pub type TI1 = M_SP_NA_1;
@@ -10,6 +10,7 @@ pub type TI3 = M_DP_NA_1;
 pub type TI11 = M_ME_NB_1;
 pub type TI13 = M_ME_NE_1;
 pub type TI45 = C_SC_NA_1;
+pub type TI49 = C_SE_NB_1;
 pub type TI50 = C_SE_NC_1;
 pub type TI112 = P_ME_NC_1;
 
@@ -22,6 +23,7 @@ pub enum SmallIE {
     TI11(M_ME_NB_1),
     TI13(M_ME_NE_1),
     TI45(C_SC_NA_1),
+    TI49(C_SE_NB_1),
     TI50(C_SE_NC_1),
     TI112(P_ME_NC_1),
     TI136(TI136),
@@ -40,6 +42,7 @@ enum IEType {
     TI11 = 11,
     TI13 = 13,
     TI45 = 45,
+    TI49 = 49,
     TI50 = 50,
     TI112 = 112,
     TI136 = 136,
@@ -59,6 +62,7 @@ const fn ie_type(typecode: u8) -> Result<IEType, ()> {
         11 => Ok(IEType::TI11),
         13 => Ok(IEType::TI13),
         45 => Ok(IEType::TI45),
+        49 => Ok(IEType::TI49),
         50 => Ok(IEType::TI50),
         112 => Ok(IEType::TI112),
         136 => Ok(IEType::TI136),
@@ -109,6 +113,7 @@ converts!(
     M_ME_NB_1 <=> TI11,
     M_ME_NE_1 <=> TI13,
     C_SC_NA_1 <=> TI45,
+    C_SE_NB_1 <=> TI49,
     C_SE_NC_1 <=> TI50,
     P_ME_NC_1 <=> TI112,
     TI136 <=> TI136,
@@ -138,6 +143,7 @@ macro_rules! map_small_ie {
             Self::TI11(v) => $f(v),
             Self::TI13(v) => $f(v),
             Self::TI45(v) => $f(v),
+            Self::TI49(v) => $f(v),
             Self::TI50(v) => $f(v),
             Self::TI112(v) => $f(v),
             Self::TI136(v) => $f(v),
@@ -183,31 +189,6 @@ impl SmallIE {
     }
 
     #[must_use]
-    pub const fn ti1(value: M_SP_NA_1) -> Self {
-        Self::TI1(value)
-    }
-    #[must_use]
-    pub const fn ti3(value: M_DP_NA_1) -> Self {
-        Self::TI3(value)
-    }
-    #[must_use]
-    pub const fn ti13(value: M_ME_NE_1) -> Self {
-        Self::TI13(value)
-    }
-    #[must_use]
-    pub const fn ti45(value: C_SC_NA_1) -> Self {
-        Self::TI45(value)
-    }
-    #[must_use]
-    pub const fn ti50(value: C_SE_NC_1) -> Self {
-        Self::TI50(value)
-    }
-    #[must_use]
-    pub const fn ti112(value: P_ME_NC_1) -> Self {
-        Self::TI112(value)
-    }
-
-    #[must_use]
     pub const fn default_for_typecode(typecode: u8) -> Option<Self> {
         match ie_type(typecode) {
             Ok(IEType::TI1) => Some(Self::TI1(ConstDefault::DEFAULT)),
@@ -215,6 +196,7 @@ impl SmallIE {
             Ok(IEType::TI11) => Some(Self::TI11(ConstDefault::DEFAULT)),
             Ok(IEType::TI13) => Some(Self::TI13(ConstDefault::DEFAULT)),
             Ok(IEType::TI45) => Some(Self::TI45(ConstDefault::DEFAULT)),
+            Ok(IEType::TI49) => Some(Self::TI49(ConstDefault::DEFAULT)),
             Ok(IEType::TI50) => Some(Self::TI50(ConstDefault::DEFAULT)),
             Ok(IEType::TI112) => Some(Self::TI112(ConstDefault::DEFAULT)),
             Ok(IEType::TI136) => Some(Self::TI136(ConstDefault::DEFAULT)),
@@ -279,6 +261,7 @@ impl SmallIE {
             | Self::TI202(_)
             | Self::TI203(_)
             | Self::TI45(_)
+            | Self::TI49(_)
             | Self::TI50(_)
             | Self::TI112(_) => None,
         }
@@ -300,6 +283,7 @@ impl SmallIE {
             | Self::TI202(_)
             | Self::TI203(_)
             | Self::TI45(_)
+            | Self::TI49(_)
             | Self::TI50(_)
             | Self::TI112(_) => None,
         }

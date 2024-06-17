@@ -28,6 +28,14 @@ pub struct C_SE_NA_1 {
     pub dco: DCO,
 }
 
+/// TI49, `C_SE_NB_1`, Set-point command, normalized value
+#[repr(C, packed)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromBytes, FromZeroes)]
+pub struct C_SE_NB_1 {
+    pub value: i16,
+    pub qos: QOS,
+}
+
 #[derive(Debug)]
 pub struct InvalidState;
 
