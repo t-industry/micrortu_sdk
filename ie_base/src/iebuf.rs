@@ -44,7 +44,7 @@ impl TryFrom<&IEBuf> for &SmallIE {
     fn try_from(value: &IEBuf) -> Result<Self, Self::Error> {
         SmallIE::default_for_typecode(value.0[0]).ok_or(IEDeserializationError)?;
 
-        let ptr = value as *const _ as *const _;
+        let ptr = core::ptr::from_ref(value) as *const _;
 
         Ok(unsafe { &*ptr })
     }
@@ -57,7 +57,7 @@ impl TryFrom<&mut IEBuf> for &mut SmallIE {
     fn try_from(value: &mut IEBuf) -> Result<Self, Self::Error> {
         SmallIE::default_for_typecode(value.0[0]).ok_or(IEDeserializationError)?;
 
-        let ptr = value as *mut _ as *mut _;
+        let ptr = core::ptr::from_mut(value) as *mut _;
 
         Ok(unsafe { &mut *ptr })
     }

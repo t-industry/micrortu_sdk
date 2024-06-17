@@ -2,6 +2,7 @@
 
 pub mod iebuf;
 pub mod small_ie;
+pub mod generic_ie;
 
 pub mod address;
 pub mod command;

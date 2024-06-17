@@ -68,8 +68,8 @@ static_cell = "2.0.0"
 
 [workspace.lints.clippy]
 use_self = "warn"
-pedantic = "warn"
-perf = "warn"
+pedantic = { level = "warn", priority = -1 }
+perf = { level = "warn", priority = -1 }
 missing-assert-message = "warn"
 
 module-name-repetitions = "allow"

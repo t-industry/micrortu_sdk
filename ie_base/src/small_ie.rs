@@ -1,55 +1,13 @@
 use const_default::ConstDefault;
-use zerocopy::{AsBytes, FromBytes};
 
-use crate::{QualityDescriptor, C_SC_NA_1, C_SE_NC_1, M_DP_NA_1, M_ME_NE_1, M_SP_NA_1, P_ME_NC_1};
-
-pub struct QueryIEType<const TYPECODE: u8>;
-
-pub trait GetIEType {
-    type Out: FromBytes
-        + AsBytes
-        + Into<SmallIE>
-        + PartialEq
-        + Copy
-        + TryFrom<SmallIE>
-        + TryFrom<f32>
-        + core::fmt::Debug
-        + Default;
-    const TYPECODE: u8;
-}
-
-impl GetIEType for QueryIEType<1> {
-    type Out = M_SP_NA_1;
-    const TYPECODE: u8 = 1;
-}
-
-impl GetIEType for QueryIEType<3> {
-    type Out = M_DP_NA_1;
-    const TYPECODE: u8 = 3;
-}
-
-impl GetIEType for QueryIEType<13> {
-    type Out = M_ME_NE_1;
-    const TYPECODE: u8 = 13;
-}
-
-impl GetIEType for QueryIEType<45> {
-    type Out = C_SC_NA_1;
-    const TYPECODE: u8 = 45;
-}
-
-impl GetIEType for QueryIEType<50> {
-    type Out = C_SE_NC_1;
-    const TYPECODE: u8 = 50;
-}
-
-impl GetIEType for QueryIEType<112> {
-    type Out = P_ME_NC_1;
-    const TYPECODE: u8 = 112;
-}
+use crate::{
+    generic_ie::IEMeta, QualityDescriptor, C_SC_NA_1, C_SE_NC_1, M_DP_NA_1, M_ME_NB_1, M_ME_NE_1,
+    M_SP_NA_1, P_ME_NC_1, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203,
+};
 
 pub type TI1 = M_SP_NA_1;
 pub type TI3 = M_DP_NA_1;
+pub type TI11 = M_ME_NB_1;
 pub type TI13 = M_ME_NE_1;
 pub type TI45 = C_SC_NA_1;
 pub type TI50 = C_SE_NC_1;
@@ -59,109 +17,109 @@ pub type TI112 = P_ME_NC_1;
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(test, derive(strum::EnumIter))]
 pub enum SmallIE {
-    TI1(M_SP_NA_1) = 1,
-    TI3(M_DP_NA_1) = 3,
-    TI13(M_ME_NE_1) = 13,
-    TI45(C_SC_NA_1) = 45,
-    TI50(C_SE_NC_1) = 50,
-    TI112(P_ME_NC_1) = 112,
+    TI1(M_SP_NA_1),
+    TI3(M_DP_NA_1),
+    TI11(M_ME_NB_1),
+    TI13(M_ME_NE_1),
+    TI45(C_SC_NA_1),
+    TI50(C_SE_NC_1),
+    TI112(P_ME_NC_1),
+    TI136(TI136),
+    TI137(TI137),
+    TI138(TI138),
+    TI139(TI139),
+    TI200(TI200),
+    TI201(TI201),
+    TI202(TI202),
+    TI203(TI203),
 }
 
-impl From<M_SP_NA_1> for SmallIE {
-    fn from(value: M_SP_NA_1) -> Self {
-        Self::TI1(value)
+enum IEType {
+    TI1 = 1,
+    TI3 = 3,
+    TI11 = 11,
+    TI13 = 13,
+    TI45 = 45,
+    TI50 = 50,
+    TI112 = 112,
+    TI136 = 136,
+    TI137 = 137,
+    TI138 = 138,
+    TI139 = 139,
+    TI200 = 200,
+    TI201 = 201,
+    TI202 = 202,
+    TI203 = 203,
+}
+
+const fn ie_type(typecode: u8) -> Result<IEType, ()> {
+    match typecode {
+        1 => Ok(IEType::TI1),
+        3 => Ok(IEType::TI3),
+        11 => Ok(IEType::TI11),
+        13 => Ok(IEType::TI13),
+        45 => Ok(IEType::TI45),
+        50 => Ok(IEType::TI50),
+        112 => Ok(IEType::TI112),
+        136 => Ok(IEType::TI136),
+        137 => Ok(IEType::TI137),
+        138 => Ok(IEType::TI138),
+        139 => Ok(IEType::TI139),
+        200 => Ok(IEType::TI200),
+        201 => Ok(IEType::TI201),
+        202 => Ok(IEType::TI202),
+        203 => Ok(IEType::TI203),
+        _ => Err(()),
     }
 }
 
-impl From<M_DP_NA_1> for SmallIE {
-    fn from(value: M_DP_NA_1) -> Self {
-        Self::TI3(value)
-    }
-}
-
-impl From<M_ME_NE_1> for SmallIE {
-    fn from(value: M_ME_NE_1) -> Self {
-        Self::TI13(value)
-    }
-}
-
-impl From<C_SC_NA_1> for SmallIE {
-    fn from(value: C_SC_NA_1) -> Self {
-        Self::TI45(value)
-    }
-}
-
-impl From<C_SE_NC_1> for SmallIE {
-    fn from(value: C_SE_NC_1) -> Self {
-        Self::TI50(value)
-    }
-}
-
-impl From<P_ME_NC_1> for SmallIE {
-    fn from(value: P_ME_NC_1) -> Self {
-        Self::TI112(value)
-    }
-}
-
-impl TryFrom<SmallIE> for M_SP_NA_1 {
+impl TryFrom<u8> for IEType {
     type Error = ();
-    fn try_from(value: SmallIE) -> Result<Self, ()> {
-        match value {
-            SmallIE::TI1(it) => Ok(it),
-            _ => Err(()),
-        }
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        ie_type(value)
     }
 }
 
-impl TryFrom<SmallIE> for M_DP_NA_1 {
-    type Error = ();
-    fn try_from(value: SmallIE) -> Result<Self, ()> {
-        match value {
-            SmallIE::TI3(it) => Ok(it),
-            _ => Err(()),
-        }
+macro_rules! converts {
+    ($($ie:ident <=> $small:ident,)*) => {
+        $(
+            impl From<$ie> for SmallIE {
+                fn from(value: $ie) -> Self {
+                    Self::$small(value)
+                }
+            }
+
+            impl TryFrom<SmallIE> for $ie {
+                type Error = ();
+                fn try_from(value: SmallIE) -> Result<Self, ()> {
+                    match value {
+                        SmallIE::$small(it) => Ok(it),
+                        _ => Err(()),
+                    }
+                }
+            }
+        )*
     }
 }
 
-impl TryFrom<SmallIE> for M_ME_NE_1 {
-    type Error = ();
-    fn try_from(value: SmallIE) -> Result<Self, ()> {
-        match value {
-            SmallIE::TI13(it) => Ok(it),
-            _ => Err(()),
-        }
-    }
-}
-
-impl TryFrom<SmallIE> for C_SC_NA_1 {
-    type Error = ();
-    fn try_from(value: SmallIE) -> Result<Self, ()> {
-        match value {
-            SmallIE::TI45(it) => Ok(it),
-            _ => Err(()),
-        }
-    }
-}
-
-impl TryFrom<SmallIE> for C_SE_NC_1 {
-    type Error = ();
-    fn try_from(value: SmallIE) -> Result<Self, ()> {
-        match value {
-            SmallIE::TI50(it) => Ok(it),
-            _ => Err(()),
-        }
-    }
-}
-
-impl TryFrom<SmallIE> for P_ME_NC_1 {
-    type Error = ();
-    fn try_from(value: SmallIE) -> Result<Self, ()> {
-        match value {
-            SmallIE::TI112(it) => Ok(it),
-            _ => Err(()),
-        }
-    }
-}
+converts!(
+    M_SP_NA_1 <=> TI1,
+    M_DP_NA_1 <=> TI3,
+    M_ME_NB_1 <=> TI11,
+    M_ME_NE_1 <=> TI13,
+    C_SC_NA_1 <=> TI45,
+    C_SE_NC_1 <=> TI50,
+    P_ME_NC_1 <=> TI112,
+    TI136 <=> TI136,
+    TI137 <=> TI137,
+    TI138 <=> TI138,
+    TI139 <=> TI139,
+    TI200 <=> TI200,
+    TI201 <=> TI201,
+    TI202 <=> TI202,
+    TI203 <=> TI203,
+);
 
 impl Default for SmallIE {
     fn default() -> Self {
@@ -172,17 +130,56 @@ impl Default for SmallIE {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BufferTooSmall;
 
+macro_rules! map_small_ie {
+    ($ie:expr, $f:expr) => {
+        match $ie {
+            Self::TI1(v) => $f(v),
+            Self::TI3(v) => $f(v),
+            Self::TI11(v) => $f(v),
+            Self::TI13(v) => $f(v),
+            Self::TI45(v) => $f(v),
+            Self::TI50(v) => $f(v),
+            Self::TI112(v) => $f(v),
+            Self::TI136(v) => $f(v),
+            Self::TI137(v) => $f(v),
+            Self::TI138(v) => $f(v),
+            Self::TI139(v) => $f(v),
+            Self::TI200(v) => $f(v),
+            Self::TI201(v) => $f(v),
+            Self::TI202(v) => $f(v),
+            Self::TI203(v) => $f(v),
+        }
+    };
+    ($ie:expr, $T:ident, || -> ($r:ty) $body:expr) => {{
+        fn f<$T: GetIEType>(_: &$T) -> $r {
+            $body
+        }
+        map_small_ie!($ie, f)
+    }};
+    ($ie:expr, $T:ident, const || -> ($r:ty) $body:expr) => {{
+        const fn f<$T: IEMeta>(_: &$T) -> $r {
+            $body
+        }
+        map_small_ie!($ie, f)
+    }};
+    ($ie:expr, $T:ident, |&$v:ident| -> ($r:ty) $body:expr) => {{
+        fn f<$T: IEMeta>($v: &$T) -> $r {
+            $body
+        }
+        map_small_ie!($ie, f)
+    }};
+    ($ie:expr, $T:ident, |&mut $v:ident| -> ($r:ty) $body:expr) => {{
+        fn f<$T: IEMeta>($v: &mut $T) -> $r {
+            $body
+        }
+        map_small_ie!($ie, f)
+    }};
+}
+
 impl SmallIE {
     #[must_use]
     pub const fn typecode(&self) -> u8 {
-        match self {
-            Self::TI1(_) => 1,
-            Self::TI3(_) => 3,
-            Self::TI13(_) => 13,
-            Self::TI45(_) => 45,
-            Self::TI50(_) => 50,
-            Self::TI112(_) => 112,
-        }
+        map_small_ie!(self, T, const || -> (u8) T::TYPECODE)
     }
 
     #[must_use]
@@ -212,27 +209,31 @@ impl SmallIE {
 
     #[must_use]
     pub const fn default_for_typecode(typecode: u8) -> Option<Self> {
-        match typecode {
-            1 => Some(Self::TI1(ConstDefault::DEFAULT)),
-            3 => Some(Self::TI3(ConstDefault::DEFAULT)),
-            13 => Some(Self::TI13(ConstDefault::DEFAULT)),
-            45 => Some(Self::TI45(ConstDefault::DEFAULT)),
-            50 => Some(Self::TI50(ConstDefault::DEFAULT)),
-            112 => Some(Self::TI112(ConstDefault::DEFAULT)),
-            _ => None,
+        match ie_type(typecode) {
+            Ok(IEType::TI1) => Some(Self::TI1(ConstDefault::DEFAULT)),
+            Ok(IEType::TI3) => Some(Self::TI3(ConstDefault::DEFAULT)),
+            Ok(IEType::TI11) => Some(Self::TI11(ConstDefault::DEFAULT)),
+            Ok(IEType::TI13) => Some(Self::TI13(ConstDefault::DEFAULT)),
+            Ok(IEType::TI45) => Some(Self::TI45(ConstDefault::DEFAULT)),
+            Ok(IEType::TI50) => Some(Self::TI50(ConstDefault::DEFAULT)),
+            Ok(IEType::TI112) => Some(Self::TI112(ConstDefault::DEFAULT)),
+            Ok(IEType::TI136) => Some(Self::TI136(ConstDefault::DEFAULT)),
+            Ok(IEType::TI137) => Some(Self::TI137(ConstDefault::DEFAULT)),
+            Ok(IEType::TI138) => Some(Self::TI138(ConstDefault::DEFAULT)),
+            Ok(IEType::TI139) => Some(Self::TI139(ConstDefault::DEFAULT)),
+            Ok(IEType::TI200) => Some(Self::TI200(ConstDefault::DEFAULT)),
+            Ok(IEType::TI201) => Some(Self::TI201(ConstDefault::DEFAULT)),
+            Ok(IEType::TI202) => Some(Self::TI202(ConstDefault::DEFAULT)),
+            Ok(IEType::TI203) => Some(Self::TI203(ConstDefault::DEFAULT)),
+            Err(()) => None,
         }
     }
 
     #[must_use]
     pub const fn align_for_typecode(typecode: u8) -> usize {
-        match typecode {
-            1 => core::mem::align_of::<M_SP_NA_1>(),
-            3 => core::mem::align_of::<M_DP_NA_1>(),
-            13 => core::mem::align_of::<M_ME_NE_1>(),
-            45 => core::mem::align_of::<C_SC_NA_1>(),
-            50 => core::mem::align_of::<C_SE_NC_1>(),
-            112 => core::mem::align_of::<P_ME_NC_1>(),
-            _ => 1,
+        match Self::default_for_typecode(typecode) {
+            Some(v) => map_small_ie!(&v, T, const || -> (usize) core::mem::align_of::<T>()),
+            None => 0,
         }
     }
 
@@ -240,28 +241,14 @@ impl SmallIE {
     /// Not includes typecode
     #[must_use]
     pub fn as_mut_bytes(&mut self) -> &mut [u8] {
-        match self {
-            Self::TI1(it) => it.as_bytes_mut(),
-            Self::TI3(it) => it.as_bytes_mut(),
-            Self::TI13(it) => it.as_bytes_mut(),
-            Self::TI45(it) => it.as_bytes_mut(),
-            Self::TI50(it) => it.as_bytes_mut(),
-            Self::TI112(it) => it.as_bytes_mut(),
-        }
+        map_small_ie!(self, T, |&mut it| -> (&mut [u8]) it.as_bytes_mut())
     }
 
     /// Returns bytes to underlying value
     /// Not includes typecode
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
-        match self {
-            Self::TI1(it) => it.as_bytes(),
-            Self::TI3(it) => it.as_bytes(),
-            Self::TI13(it) => it.as_bytes(),
-            Self::TI45(it) => it.as_bytes(),
-            Self::TI50(it) => it.as_bytes(),
-            Self::TI112(it) => it.as_bytes(),
-        }
+        map_small_ie!(self, T, |&it| -> (&[u8]) it.as_bytes())
     }
 
     /// Copies bytes to underlying value
@@ -281,8 +268,19 @@ impl SmallIE {
         match self {
             Self::TI1(ie) => Some(&ie.value),
             Self::TI3(ie) => Some(&ie.value),
+            Self::TI11(ie) => Some(&ie.qds),
             Self::TI13(ie) => Some(&ie.qds),
-            Self::TI45(_) | Self::TI50(_) | Self::TI112(_) => None,
+            Self::TI136(ie) => Some(&ie.qds),
+            Self::TI137(ie) => Some(&ie.qds),
+            Self::TI138(ie) => Some(&ie.qds),
+            Self::TI139(ie) => Some(&ie.qds),
+            Self::TI200(_)
+            | Self::TI201(_)
+            | Self::TI202(_)
+            | Self::TI203(_)
+            | Self::TI45(_)
+            | Self::TI50(_)
+            | Self::TI112(_) => None,
         }
     }
 
@@ -291,8 +289,19 @@ impl SmallIE {
         match self {
             Self::TI1(ie) => Some(&mut ie.value),
             Self::TI3(ie) => Some(&mut ie.value),
+            Self::TI11(ie) => Some(&mut ie.qds),
             Self::TI13(ie) => Some(&mut ie.qds),
-            Self::TI45(_) | Self::TI50(_) | Self::TI112(_) => None,
+            Self::TI136(ie) => Some(&mut ie.qds),
+            Self::TI137(ie) => Some(&mut ie.qds),
+            Self::TI138(ie) => Some(&mut ie.qds),
+            Self::TI139(ie) => Some(&mut ie.qds),
+            Self::TI200(_)
+            | Self::TI201(_)
+            | Self::TI202(_)
+            | Self::TI203(_)
+            | Self::TI45(_)
+            | Self::TI50(_)
+            | Self::TI112(_) => None,
         }
     }
 

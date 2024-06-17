@@ -1,3 +1,5 @@
+#![allow(non_camel_case_types)]
+
 use bitfield::{Bit, BitMut, BitRange, BitRangeMut};
 use const_default::ConstDefault;
 use int_enum::IntEnum;
@@ -7,7 +9,6 @@ use crate::{impl_qds_for, qds::QualityDescriptorHolder, RawQualityDescriptor};
 
 /// TI1, `M_SP_NA_1`, Single-point information without time tag
 #[repr(C, packed)]
-#[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
 pub struct M_SP_NA_1 {
     pub value: SIQ,
@@ -15,18 +16,56 @@ pub struct M_SP_NA_1 {
 
 /// TI3, `M_DP_NA_1`, Double-point information without time tag
 #[repr(C, packed)]
-#[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
 pub struct M_DP_NA_1 {
     pub value: DIQ,
 }
 
+/// TI11, `M_ME_NB_1`, Measured value, scaled value
+#[repr(C, packed)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+pub struct M_ME_NB_1 {
+    pub value: i16,
+    pub qds: QDS,
+}
+
 /// TI13, `M_ME_NC_1`, Measured value, short floating point number
 #[repr(C, packed)]
-#[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
 pub struct M_ME_NE_1 {
     pub value: f32,
+    pub qds: QDS,
+}
+
+/// TI136, Measured value, 32-bit unsigned integer
+#[repr(C, packed)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+pub struct TI136 {
+    pub value: u32,
+    pub qds: QDS,
+}
+
+/// TI137, Measured value, 32-bit signed integer
+#[repr(C, packed)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+pub struct TI137 {
+    pub value: i32,
+    pub qds: QDS,
+}
+
+/// TI138, Measured value, 64-bit unsigned integer
+#[repr(C, packed)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+pub struct TI138 {
+    pub value: u64,
+    pub qds: QDS,
+}
+
+/// TI139, Measured value, 64-bit signed integer
+#[repr(C, packed)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+pub struct TI139 {
+    pub value: i64,
     pub qds: QDS,
 }
 
@@ -34,18 +73,6 @@ pub struct M_ME_NE_1 {
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
 pub struct SIQ {
     pub raw: RawQualityDescriptor,
-}
-impl_qds_for!(SIQ);
-
-impl SIQ {
-    #[must_use]
-    pub fn spi(&self) -> bool {
-        self.raw.bit(0)
-    }
-    pub fn set_spi(&mut self, value: bool) -> &mut Self {
-        self.raw.set_bit(0, value);
-        self
-    }
 }
 
 #[repr(u8)]
@@ -62,6 +89,26 @@ pub enum DPI {
 pub struct DIQ {
     pub raw: RawQualityDescriptor,
 }
+
+#[repr(C, packed)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+pub struct QDS {
+    pub raw: RawQualityDescriptor,
+}
+
+impl_qds_for!(SIQ);
+
+impl SIQ {
+    #[must_use]
+    pub fn spi(&self) -> bool {
+        self.raw.bit(0)
+    }
+    pub fn set_spi(&mut self, value: bool) -> &mut Self {
+        self.raw.set_bit(0, value);
+        self
+    }
+}
+
 impl_qds_for!(DIQ);
 
 impl DIQ {
@@ -73,12 +120,6 @@ impl DIQ {
         self.raw.set_bit_range(1, 0, u8::from(value));
         self
     }
-}
-
-#[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
-pub struct QDS {
-    pub raw: RawQualityDescriptor,
 }
 
 impl QualityDescriptorHolder for QDS {
