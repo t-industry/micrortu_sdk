@@ -6,6 +6,8 @@ use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
 pub use ie_base::IEBuf;
 
+pub const BINDINGS_BYTES_CAP: usize = 512;
+
 #[repr(C, align(8))]
 #[derive(AsBytes, FromZeroes, FromBytes, Debug)]
 pub struct Config(pub [u8; 504]);
@@ -14,8 +16,8 @@ pub struct Config(pub [u8; 504]);
 #[repr(C, align(8))]
 #[derive(AsBytes, FromZeroes, FromBytes, Debug)]
 pub struct Shared {
-    pub latched_params: [u8; 256],
-    pub latched_ports: [u8; 256],
+    pub latched_params: [u8; BINDINGS_BYTES_CAP],
+    pub latched_ports: [u8; BINDINGS_BYTES_CAP],
 }
 
 /// Shared data between the wasm module and the host.
@@ -74,8 +76,8 @@ impl Shared {
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            latched_params: [0; 256],
-            latched_ports: [0; 256],
+            latched_params: [0; BINDINGS_BYTES_CAP],
+            latched_ports: [0; BINDINGS_BYTES_CAP],
         }
     }
 

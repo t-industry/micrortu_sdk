@@ -66,7 +66,7 @@ for reads and writes for at least 512 bytes.
 #### `COLLECTED_STRINGS`
 
 It should be `&[u8]`, which is a pointer to the start and length of the slice.
-It should point to all names of the ports and params, concatenated. 
+It should point to all names of the ports and params, concatenated.
 `name_offset` and `name_len` are relative to this slice.
 
 #### `factory_{block_name}`
@@ -130,6 +130,7 @@ use core::mem::{ManuallyDrop, MaybeUninit};
 
 pub use getters_setters::*;
 pub use ie_base;
+pub use wasm_global_shared_data;
 /// Macros for generating parser of arguments block requires.
 pub use ie_representation_derive::{finalize, params, ports, register_block, Config};
 
@@ -137,7 +138,7 @@ pub use bump_allocator::BumpAllocator;
 pub use ie_base::IEBuf;
 pub use wasm_global_shared_data::{
     BindingDefinition, Direction, FactoryInput, NativeBindingDefinition, ParseError, Shared,
-    StepResult, IN, IN_OUT, OUT, REQUIRED,
+    StepResult, BINDINGS_BYTES_CAP, IN, IN_OUT, OUT, REQUIRED,
 };
 
 pub use ufmt;
