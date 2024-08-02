@@ -65,6 +65,14 @@ pub trait QualityDescriptor {
     fn set_nt(&mut self, value: bool);
     fn iv(&self) -> bool;
     fn set_iv(&mut self, value: bool);
+
+    fn is_bad(&self) -> bool {
+        self.ov() || self.bl() || self.sb() || self.nt() || self.iv()
+    }
+
+    fn is_good(&self) -> bool {
+        !self.is_bad()
+    }
 }
 
 pub trait QualityDescriptorHolder {
