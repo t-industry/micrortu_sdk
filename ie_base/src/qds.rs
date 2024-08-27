@@ -6,6 +6,12 @@ use zerocopy::{AsBytes, FromBytes, FromZeroes};
 #[repr(transparent)]
 pub struct RawQualityDescriptor(pub u8);
 
+impl RawQualityDescriptor {
+    pub const INVALID: Self = Self(0x80);
+    pub const NONTOPICAL: Self = Self(0x40);
+    pub const BAD: Self = Self(Self::INVALID.0 | Self::NONTOPICAL.0);
+}
+
 impl From<u8> for RawQualityDescriptor {
     fn from(value: u8) -> Self {
         Self(value)
@@ -73,6 +79,14 @@ pub trait QualityDescriptor {
     fn is_good(&self) -> bool {
         !self.is_bad()
     }
+
+    fn update_from(&mut self, src: &dyn QualityDescriptor) {
+        self.set_ov(src.ov());
+        self.set_bl(src.bl());
+        self.set_sb(src.sb());
+        self.set_nt(src.nt());
+        self.set_iv(src.iv());
+    }
 }
 
 pub trait QualityDescriptorHolder {
@@ -124,5 +138,15 @@ impl<T: QualityDescriptorHolder> QualityDescriptor for T {
     }
     fn set_iv(&mut self, value: bool) {
         self.mut_qds_raw().set_bit(7, value);
+    }
+}
+
+impl QualityDescriptorHolder for RawQualityDescriptor {
+    fn qds_raw(&self) -> RawQualityDescriptor {
+        *self
+    }
+
+    fn mut_qds_raw(&mut self) -> &mut RawQualityDescriptor {
+        self
     }
 }

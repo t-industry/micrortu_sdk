@@ -75,6 +75,18 @@ pub struct SIQ {
     pub raw: RawQualityDescriptor,
 }
 
+impl SIQ {
+    pub const BAD: Self = Self {
+        raw: RawQualityDescriptor::BAD,
+    };
+    pub const INVALID: Self = Self {
+        raw: RawQualityDescriptor::INVALID,
+    };
+    pub const NONTOPICAL: Self = Self {
+        raw: RawQualityDescriptor::NONTOPICAL,
+    };
+}
+
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq, IntEnum)]
 pub enum DPI {
@@ -90,10 +102,28 @@ pub struct DIQ {
     pub raw: RawQualityDescriptor,
 }
 
+impl DIQ {
+    pub const BAD: Self = Self {
+        raw: RawQualityDescriptor::BAD,
+    };
+    pub const INVALID: Self = Self {
+        raw: RawQualityDescriptor::INVALID,
+    };
+    pub const NONTOPICAL: Self = Self {
+        raw: RawQualityDescriptor::NONTOPICAL,
+    };
+}
+
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
 pub struct QDS {
     pub raw: RawQualityDescriptor,
+}
+
+impl QDS {
+    pub const BAD: Self = Self {
+        raw: RawQualityDescriptor(0xC0),
+    };
 }
 
 impl_qds_for!(SIQ);
