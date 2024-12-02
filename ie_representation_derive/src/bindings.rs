@@ -352,7 +352,7 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
 
     let report = quote! {
         #[cfg(not(target_arch = "wasm32"))]
-        pub const fn report() -> &'static [::micrortu_sdk::NativeBindingDefinition<'static>] {
+        fn report() -> &'static [::micrortu_sdk::NativeBindingDefinition<'static>] {
             const BINDINGS: &[::micrortu_sdk::NativeBindingDefinition<'static>] = &[
                 #(#report_blocks,)*
             ];
@@ -378,7 +378,7 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             _marker: ::core::marker::PhantomData<&'a ()>,
         }
 
-        impl<'a> #struct_name<'a> {
+        impl<'a> BlockPorts<'a> for #struct_name<'a> {
             #parse
             #report
         }

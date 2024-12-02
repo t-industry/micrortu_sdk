@@ -130,9 +130,9 @@ use core::mem::{ManuallyDrop, MaybeUninit};
 
 pub use getters_setters::*;
 pub use ie_base;
-pub use wasm_global_shared_data;
 /// Macros for generating parser of arguments block requires.
 pub use ie_representation_derive::{finalize, params, ports, register_block, Config};
+pub use wasm_global_shared_data;
 
 pub use bump_allocator::BumpAllocator;
 pub use ie_base::IEBuf;
@@ -157,3 +157,25 @@ pub fn wasm_unwrap<T>(v: Option<T>) -> T {
 }
 
 pub trait Config: zerocopy::FromBytes + zerocopy::AsBytes {}
+
+pub trait BlockPorts<'a>: Sized {
+    fn parse_fallible(source: &'a mut [u8]) -> Result<Self, ParseError>;
+    fn parse(source: &'a mut [u8]) -> Self {
+        match Self::parse_fallible(source) {
+            Ok(binds) => binds,
+            Err(_err) => {
+                // error!("Failed to parse bindings: {:?}", err);
+                #[cfg(target_arch = "wasm32")]
+                {
+                    ::core::arch::wasm32::unreachable()
+                }
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    panic!("Failed to parse bindings: {:?}", _err)
+                }
+            }
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    fn report() -> &'static [NativeBindingDefinition<'static>];
+}
