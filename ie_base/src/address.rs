@@ -3,11 +3,15 @@ use core::str::FromStr;
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
 #[repr(C, packed)]
-#[derive(Copy, Clone, Debug, PartialEq, Default, AsBytes, FromZeroes, FromBytes)]
+#[derive(
+    Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default, AsBytes, FromZeroes, FromBytes,
+)]
 pub struct CA(pub u8, pub u8);
 
 #[repr(C, packed)]
-#[derive(Copy, Clone, Debug, PartialEq, Default, AsBytes, FromZeroes, FromBytes)]
+#[derive(
+    Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default, AsBytes, FromZeroes, FromBytes,
+)]
 pub struct IOA(pub u8, pub u8, pub u8);
 
 #[derive(Debug)]
@@ -77,7 +81,6 @@ impl FromStr for IOA {
     }
 }
 
-
 impl core::fmt::Display for IOA {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "IOA({}.{}.{})", self.0, self.1, self.2)
@@ -89,4 +92,3 @@ impl core::fmt::Display for CA {
         write!(f, "CA({}.{})", self.0, self.1)
     }
 }
-
