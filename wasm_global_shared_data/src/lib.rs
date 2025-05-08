@@ -66,9 +66,9 @@ pub const OUT: Direction = Direction::OUT;
 pub const IN_OUT: Direction = Direction::IN_OUT;
 
 impl Direction {
-    const IN: Self = Self(0);
-    const OUT: Self = Self(1);
-    const IN_OUT: Self = Self(2);
+    pub const IN: Self = Self(0);
+    pub const OUT: Self = Self(1);
+    pub const IN_OUT: Self = Self(2);
 }
 
 impl Default for Shared {

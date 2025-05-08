@@ -255,9 +255,9 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
 
         let to_nonzero_max_size = port.upper_bound.map_or(0, |m| m as u8);
         let direction_quote = match direction {
-            Direction::In => quote! { ::micrortu_sdk::IN },
-            Direction::Out => quote! { ::micrortu_sdk::OUT },
-            Direction::InOut => quote! { ::micrortu_sdk::IN_OUT },
+            Direction::In => quote! { ::micrortu_sdk::Direction::IN },
+            Direction::Out => quote! { ::micrortu_sdk::Direction::OUT },
+            Direction::InOut => quote! { ::micrortu_sdk::Direction::IN_OUT },
         };
 
         let port_typ = port.typ as u8;
