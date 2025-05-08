@@ -2,9 +2,54 @@ use bitfield::{Bit, BitMut, BitRange, BitRangeMut};
 use const_default::ConstDefault;
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
+#[cfg(feature = "rkyv")]
+use {
+    bytecheck::CheckBytes,
+    rkyv::{Archive, Portable, Serialize},
+};
+
 #[derive(Debug, Clone, Copy, Default, ConstDefault, AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
+#[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 #[repr(transparent)]
 pub struct RawQualityDescriptor(pub u8);
+
+pub trait QualityDescriptorHolder {
+    fn qds_raw(&self) -> RawQualityDescriptor;
+    fn mut_qds_raw(&mut self) -> &mut RawQualityDescriptor;
+    fn has_ov(&self) -> bool {
+        false
+    }
+}
+
+pub trait QualityDescriptor {
+    fn ov(&self) -> bool;
+    fn set_ov(&mut self, value: bool);
+    fn bl(&self) -> bool;
+    fn set_bl(&mut self, value: bool);
+    fn sb(&self) -> bool;
+    fn set_sb(&mut self, value: bool);
+    fn nt(&self) -> bool;
+    fn set_nt(&mut self, value: bool);
+    fn iv(&self) -> bool;
+    fn set_iv(&mut self, value: bool);
+
+    fn is_bad(&self) -> bool {
+        self.ov() || self.bl() || self.sb() || self.nt() || self.iv()
+    }
+
+    fn is_good(&self) -> bool {
+        !self.is_bad()
+    }
+
+    fn update_from(&mut self, src: &dyn QualityDescriptor) {
+        self.set_ov(src.ov());
+        self.set_bl(src.bl());
+        self.set_sb(src.sb());
+        self.set_nt(src.nt());
+        self.set_iv(src.iv());
+    }
+}
 
 impl RawQualityDescriptor {
     pub const INVALID: Self = Self(0x80);
@@ -58,43 +103,6 @@ macro_rules! impl_qds_for {
             }
         }
     };
-}
-
-pub trait QualityDescriptor {
-    fn ov(&self) -> bool;
-    fn set_ov(&mut self, value: bool);
-    fn bl(&self) -> bool;
-    fn set_bl(&mut self, value: bool);
-    fn sb(&self) -> bool;
-    fn set_sb(&mut self, value: bool);
-    fn nt(&self) -> bool;
-    fn set_nt(&mut self, value: bool);
-    fn iv(&self) -> bool;
-    fn set_iv(&mut self, value: bool);
-
-    fn is_bad(&self) -> bool {
-        self.ov() || self.bl() || self.sb() || self.nt() || self.iv()
-    }
-
-    fn is_good(&self) -> bool {
-        !self.is_bad()
-    }
-
-    fn update_from(&mut self, src: &dyn QualityDescriptor) {
-        self.set_ov(src.ov());
-        self.set_bl(src.bl());
-        self.set_sb(src.sb());
-        self.set_nt(src.nt());
-        self.set_iv(src.iv());
-    }
-}
-
-pub trait QualityDescriptorHolder {
-    fn qds_raw(&self) -> RawQualityDescriptor;
-    fn mut_qds_raw(&mut self) -> &mut RawQualityDescriptor;
-    fn has_ov(&self) -> bool {
-        false
-    }
 }
 
 impl<T: QualityDescriptorHolder> QualityDescriptor for T {

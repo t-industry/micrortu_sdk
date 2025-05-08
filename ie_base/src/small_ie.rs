@@ -55,6 +55,9 @@ enum IEType {
     TI203 = 203,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct BufferTooSmall;
+
 const fn ie_type(typecode: u8) -> Result<IEType, ()> {
     match typecode {
         1 => Ok(IEType::TI1),
@@ -131,9 +134,6 @@ impl Default for SmallIE {
         Self::TI1(ConstDefault::DEFAULT)
     }
 }
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct BufferTooSmall;
 
 macro_rules! map_small_ie {
     ($ie:expr, $f:expr) => {

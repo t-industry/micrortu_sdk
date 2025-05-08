@@ -2,6 +2,12 @@ use bitfield::{Bit, BitMut, BitRange, BitRangeMut};
 use const_default::ConstDefault;
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
+#[cfg(feature = "rkyv")]
+use {
+    bytecheck::CheckBytes,
+    rkyv::{Archive, Portable, Serialize},
+};
+
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum QU {
@@ -12,20 +18,23 @@ pub enum QU {
     Reserved(u8) = 4,
 }
 
-pub trait QualifierOfCommand {
-    fn se(&self) -> bool;
-    fn set_se(&mut self, value: bool) -> &mut Self;
-    fn qu(&self) -> QU;
-    fn set_qu(&mut self, value: QU) -> &mut Self;
-}
-
-#[derive(Debug, Clone, Copy, Default, ConstDefault, AsBytes, FromZeroes, FromBytes)]
 #[repr(transparent)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
+#[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 pub struct RawQualifierOfCommand(pub u8);
 
 pub trait QualifierOfCommandHolder {
     fn qoc_raw(&self) -> RawQualifierOfCommand;
     fn mut_qoc_raw(&mut self) -> &mut RawQualifierOfCommand;
+}
+
+pub trait QualifierOfCommand {
+    fn se(&self) -> bool;
+    fn set_se(&mut self, value: bool) -> &mut Self;
+    fn qu(&self) -> QU;
+    fn set_qu(&mut self, value: QU) -> &mut Self;
 }
 
 impl BitRange<u8> for RawQualifierOfCommand {
@@ -44,12 +53,6 @@ impl PartialOrd for RawQualifierOfCommand {
     fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         let mask = 0b1111_1100;
         Some((self.0 & mask).cmp(&(other.0 & mask)).reverse())
-    }
-}
-
-impl PartialEq for RawQualifierOfCommand {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
     }
 }
 

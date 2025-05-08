@@ -3,14 +3,28 @@ use const_default::ConstDefault;
 use int_enum::IntEnum;
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
+#[cfg(feature = "rkyv")]
+use {
+    bytecheck::CheckBytes,
+    rkyv::{Archive, Portable, Serialize},
+};
+
 #[repr(C, packed)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromBytes, FromZeroes)]
+#[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 /// TI112, `P_ME_NC_1`, Parameter of measured values, short floating point number
 pub struct P_ME_NC_1 {
     pub value: f32,
     pub qpm: QPM,
 }
+
+#[repr(transparent)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
+#[cfg_attr(feature = "rkyv", rkyv(as = Self))]
+pub struct QPM(pub u8);
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq, IntEnum)]
@@ -24,13 +38,12 @@ pub enum KPA {
     // 32..63 = reserved for custom use
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromBytes, FromZeroes)]
-pub struct QPM(pub u8);
+crate::unsafe_resolve_as!(P_ME_NC_1, r1, struct, rkyv::rend::f32_le, value, QPM, qpm);
 
 // this is a cbindgen-friendly way of generating bitfield accessors
 // cbindgen can't eat bitfield! macro directly
-bitfield_bitrange! {struct QPM(u8)}
+bitfield_bitrange! { struct QPM(u8) }
+
 impl QPM {
     bitfield_fields! {
         u8;

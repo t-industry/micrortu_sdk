@@ -5,18 +5,26 @@ use const_default::ConstDefault;
 use int_enum::IntEnum;
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
+#[cfg(feature = "rkyv")]
+use {
+    bytecheck::CheckBytes,
+    rkyv::{Archive, Portable, Serialize},
+};
+
 use crate::{impl_qds_for, qds::QualityDescriptorHolder, RawQualityDescriptor};
 
 /// TI1, `M_SP_NA_1`, Single-point information without time tag
-#[repr(C, packed)]
+#[repr(C)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct M_SP_NA_1 {
     pub value: SIQ,
 }
 
 /// TI3, `M_DP_NA_1`, Double-point information without time tag
-#[repr(C, packed)]
+#[repr(C)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct M_DP_NA_1 {
     pub value: DIQ,
 }
@@ -24,6 +32,7 @@ pub struct M_DP_NA_1 {
 /// TI11, `M_ME_NB_1`, Measured value, scaled value
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct M_ME_NB_1 {
     pub value: i16,
     pub qds: QDS,
@@ -32,6 +41,7 @@ pub struct M_ME_NB_1 {
 /// TI13, `M_ME_NC_1`, Measured value, short floating point number
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct M_ME_NE_1 {
     pub value: f32,
     pub qds: QDS,
@@ -40,6 +50,7 @@ pub struct M_ME_NE_1 {
 /// TI136, Measured value, 32-bit unsigned integer
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct TI136 {
     pub value: u32,
     pub qds: QDS,
@@ -48,6 +59,7 @@ pub struct TI136 {
 /// TI137, Measured value, 32-bit signed integer
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct TI137 {
     pub value: i32,
     pub qds: QDS,
@@ -56,6 +68,7 @@ pub struct TI137 {
 /// TI138, Measured value, 64-bit unsigned integer
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct TI138 {
     pub value: u64,
     pub qds: QDS,
@@ -64,27 +77,37 @@ pub struct TI138 {
 /// TI139, Measured value, 64-bit signed integer
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct TI139 {
     pub value: i64,
     pub qds: QDS,
 }
 
-#[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[repr(C)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
+#[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 pub struct SIQ {
     pub raw: RawQualityDescriptor,
 }
 
-impl SIQ {
-    pub const BAD: Self = Self {
-        raw: RawQualityDescriptor::BAD,
-    };
-    pub const INVALID: Self = Self {
-        raw: RawQualityDescriptor::INVALID,
-    };
-    pub const NONTOPICAL: Self = Self {
-        raw: RawQualityDescriptor::NONTOPICAL,
-    };
+#[repr(C)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
+#[cfg_attr(feature = "rkyv", rkyv(as = Self))]
+pub struct QDS {
+    pub raw: RawQualityDescriptor,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
+#[cfg_attr(feature = "rkyv", rkyv(as = Self))]
+pub struct DIQ {
+    pub raw: RawQualityDescriptor,
 }
 
 #[repr(u8)]
@@ -96,10 +119,35 @@ pub enum DPI {
     Indeterminate2 = 3,
 }
 
-#[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
-pub struct DIQ {
-    pub raw: RawQualityDescriptor,
+#[cfg(feature = "rkyv")]
+mod impls {
+    use super::*;
+    use crate::unsafe_resolve_as;
+    use rkyv::rend::{f32_le, i16_le, i32_le, i64_le, u32_le, u64_le};
+
+    unsafe_resolve_as!(M_SP_NA_1, r1, struct, SIQ, value);
+    unsafe_resolve_as!(M_DP_NA_1, r2, struct, DIQ, value);
+    unsafe_resolve_as!(M_ME_NB_1, r3, struct, i16_le, value, QDS, qds);
+    unsafe_resolve_as!(M_ME_NE_1, r4, struct, f32_le, value, QDS, qds);
+    unsafe_resolve_as!(TI136, r5, struct, u32_le, value, QDS, qds);
+    unsafe_resolve_as!(TI137, r6, struct, i32_le, value, QDS, qds);
+    unsafe_resolve_as!(TI138, r7, struct, u64_le, value, QDS, qds);
+    unsafe_resolve_as!(TI139, r8, struct, i64_le, value, QDS, qds);
+}
+
+impl_qds_for!(SIQ);
+impl_qds_for!(DIQ);
+
+impl SIQ {
+    pub const BAD: Self = Self {
+        raw: RawQualityDescriptor::BAD,
+    };
+    pub const INVALID: Self = Self {
+        raw: RawQualityDescriptor::INVALID,
+    };
+    pub const NONTOPICAL: Self = Self {
+        raw: RawQualityDescriptor::NONTOPICAL,
+    };
 }
 
 impl DIQ {
@@ -114,19 +162,11 @@ impl DIQ {
     };
 }
 
-#[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
-pub struct QDS {
-    pub raw: RawQualityDescriptor,
-}
-
 impl QDS {
     pub const BAD: Self = Self {
         raw: RawQualityDescriptor(0xC0),
     };
 }
-
-impl_qds_for!(SIQ);
 
 impl SIQ {
     #[must_use]
@@ -138,8 +178,6 @@ impl SIQ {
         self
     }
 }
-
-impl_qds_for!(DIQ);
 
 impl DIQ {
     #[must_use]

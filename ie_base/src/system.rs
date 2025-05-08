@@ -2,12 +2,44 @@ use const_default::ConstDefault;
 use int_enum::IntEnum;
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
+#[cfg(feature = "rkyv")]
+use {
+    bytecheck::CheckBytes,
+    rkyv::{Archive, Portable, Serialize},
+};
+
 /// TI100, `C_IC_NA_1`, Interrogation command
-#[repr(C, packed)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromBytes, FromZeroes)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, Eq)] //
+#[derive(AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
+#[cfg_attr(feature = "rkyv", rkyv(as = Self))]
+#[repr(transparent)]
 pub struct C_IC_NA_1 {
     pub qoi: u8,
+}
+
+/// TI102, `C_RD_NA_1`, Read command
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, Eq)] //
+#[derive(AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
+#[cfg_attr(feature = "rkyv", rkyv(as = Self))]
+#[repr(transparent)]
+pub struct C_RD_NA_1 {}
+
+/// TI104, `C_TS_NA_1`, Test command
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, Eq)] //
+#[derive(AsBytes, FromZeroes, FromBytes)]
+#[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
+#[cfg_attr(feature = "rkyv", rkyv(as = Self))]
+#[repr(C)]
+pub struct C_TS_NA_1 {
+    /// 0b10101010
+    pub pat0: u8,
+    /// 0b01010101
+    pub pat1: u8,
 }
 
 /// Qualifier Of Interrogation
@@ -35,21 +67,4 @@ pub enum QOI {
     Group16 = 36,
     // 37..63  = reserved for standard
     // 64..255 = reserved for custom use
-}
-
-/// TI102, `C_RD_NA_1`, Read command
-#[repr(C, packed)]
-#[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromBytes, FromZeroes)]
-pub struct C_RD_NA_1 {}
-
-/// TI104, `C_TS_NA_1`, Test command
-#[repr(C, packed)]
-#[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromBytes, FromZeroes)]
-pub struct C_TS_NA_1 {
-    /// 0b10101010
-    pub pat0: u8,
-    /// 0b01010101
-    pub pat1: u8,
 }

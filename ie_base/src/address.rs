@@ -1,17 +1,24 @@
 use core::str::FromStr;
 
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
+#[cfg(feature = "rkyv")]
+use {
+    bytecheck::CheckBytes,
+    rkyv::{Archive, Portable, Serialize},
+};
 
-#[repr(C, packed)]
-#[derive(
-    Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default, AsBytes, FromZeroes, FromBytes,
-)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default, Hash)] //
+#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
+#[cfg_attr(feature = "rkyv", rkyv(as = Self))]
+#[repr(C)]
 pub struct CA(pub u8, pub u8);
 
-#[repr(C, packed)]
-#[derive(
-    Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default, AsBytes, FromZeroes, FromBytes,
-)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default, Hash)] //
+#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
+#[cfg_attr(feature = "rkyv", rkyv(as = Self))]
+#[repr(C)]
 pub struct IOA(pub u8, pub u8, pub u8);
 
 #[derive(Debug)]
