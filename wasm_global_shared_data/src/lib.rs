@@ -26,7 +26,7 @@ pub struct Shared {
 pub struct FactoryInput {
     pub control_period_ms: u32,
     pub config_len: u32,
-    pub config: Config
+    pub config: Config,
 }
 
 pub const REQUIRED: u8 = 0x0001;
@@ -50,7 +50,7 @@ pub enum ParseError {
 /// Meaningful values are `IN`, `OUT`, `IN_OUT`.
 /// All other values are invalid, but safe.
 #[repr(C)]
-#[derive(Debug, AsBytes, FromZeroes, FromBytes, Clone, Copy)]
+#[derive(Debug, AsBytes, FromZeroes, FromBytes, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Direction(pub u8);
 
 /// The result of a step. `0` means success, anything else is an error.
@@ -59,11 +59,17 @@ pub struct Direction(pub u8);
 pub type StepResult = i32;
 
 /// Represents an input binding.
-pub const IN: Direction = Direction(0);
+pub const IN: Direction = Direction::IN;
 /// Represents an output binding.
-pub const OUT: Direction = Direction(1);
+pub const OUT: Direction = Direction::OUT;
 /// Represents an input-output binding.
-pub const IN_OUT: Direction = Direction(2);
+pub const IN_OUT: Direction = Direction::IN_OUT;
+
+impl Direction {
+    const IN: Self = Self(0);
+    const OUT: Self = Self(1);
+    const IN_OUT: Self = Self(2);
+}
 
 impl Default for Shared {
     fn default() -> Self {
@@ -80,7 +86,6 @@ impl Shared {
             latched_ports: [0; BINDINGS_BYTES_CAP],
         }
     }
-
 }
 
 /// A binding definition.
@@ -160,6 +165,9 @@ mod test {
     #[test]
     fn assert_shared_default_zeroed() {
         assert_eq!(Shared::new().as_bytes(), Shared::new_zeroed().as_bytes());
-        assert_eq!(Shared::default().as_bytes(), Shared::new_zeroed().as_bytes());
+        assert_eq!(
+            Shared::default().as_bytes(),
+            Shared::new_zeroed().as_bytes()
+        );
     }
 }

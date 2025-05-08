@@ -138,7 +138,7 @@ pub use bump_allocator::BumpAllocator;
 pub use ie_base::IEBuf;
 pub use wasm_global_shared_data::{
     BindingDefinition, Direction, FactoryInput, NativeBindingDefinition, ParseError, Shared,
-    StepResult, BINDINGS_BYTES_CAP, IN, IN_OUT, OUT, REQUIRED,
+    StepResult, BINDINGS_BYTES_CAP, REQUIRED,
 };
 
 pub use ufmt;
