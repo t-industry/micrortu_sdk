@@ -140,6 +140,8 @@ pub use wasm_global_shared_data::{
     BindingDefinition, Direction, FactoryInput, NativeBindingDefinition, ParseError, Shared,
     StepResult, BINDINGS_BYTES_CAP, REQUIRED,
 };
+// these re-exports are used by `ie_representation_derive::register_block! macro`
+pub use wasm_global_shared_data::{IN, IN_OUT, OUT};
 
 pub use ufmt;
 
