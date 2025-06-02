@@ -6,7 +6,7 @@ use syn::{
     parse_macro_input, Ident, Token,
 };
 
-use crate::state::{get_block_conf, get_ports_params, intern_static_string, set_block};
+use crate::state::{get_block_conf, get_ports_params, intern_static_string, set_block, should_bail_on_duplicates};
 
 struct RegisterBlockInput {
     block_type: Ident,
@@ -105,7 +105,7 @@ pub fn register_block(input: TokenStream) -> TokenStream {
         params: params.clone(),
         block_conf: get_block_conf(&block_name_str),
     };
-    if set_block(&block_name_str, block).is_err() {
+    if set_block(&block_name_str, block).is_some() && should_bail_on_duplicates() {
         return syn::Error::new_spanned(block_name, "Block with that name already exists")
             .to_compile_error()
             .into();

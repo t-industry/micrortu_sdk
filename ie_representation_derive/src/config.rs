@@ -3,7 +3,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Fields, Meta, MetaList, Type};
 
-use crate::{bindings::parse_block_names, state::set_block_conf};
+use crate::{bindings::parse_block_names, state::{set_block_conf, should_bail_on_duplicates}};
 
 pub fn derive_config(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -53,7 +53,7 @@ pub fn derive_config(input: TokenStream) -> TokenStream {
     for block_name in block_names {
         let res = set_block_conf(&block_name, block_conf.clone());
 
-        if res.is_err() {
+        if res.is_some() && should_bail_on_duplicates() {
             return syn::Error::new_spanned(name, "Config with that name already exists")
                 .to_compile_error()
                 .into();

@@ -106,7 +106,11 @@ for<'a> extern "C" fn(&'a mut Shared, &'a mut BlockName) -> StepResult;
 There also must be exports for ports and params of type `&[BindingDefinition]`,
 which is [i32; 2] in memory - pointer to the start and length of the slice.
 
+## Environment Variables
 
+`MICRORTU_BAIL_ON_DUPLICATES` - if set, compiler will check for duplicate
+port/param definitions, confs and blocks themselves. If not set, last definition
+would be used.
 
 */
 

@@ -1,8 +1,5 @@
 use micrortu_build_utils::{Block, BlockConf};
-use std::{
-    collections::BTreeMap,
-    sync::Mutex,
-};
+use std::{collections::BTreeMap, sync::Mutex};
 
 static STRINGS: Mutex<String> = Mutex::new(String::new());
 static BLOCK_CONFIGS: Mutex<BTreeMap<(String, String), BlockConf>> = Mutex::new(BTreeMap::new());
@@ -11,6 +8,10 @@ static PARAMS: Mutex<BTreeMap<(String, String), Vec<micrortu_build_utils::Port>>
     Mutex::new(BTreeMap::new());
 static PORTS: Mutex<BTreeMap<(String, String), Vec<micrortu_build_utils::Port>>> =
     Mutex::new(BTreeMap::new());
+
+pub fn should_bail_on_duplicates() -> bool {
+    std::env::var("MICRORTU_BAIL_ON_DUPLICATES").is_ok_and(|v| v == "1" || v == "true")
+}
 
 pub fn get_ports_params(
     block_name: &str,
@@ -28,24 +29,24 @@ pub fn get_ports_params(
     (ports, params)
 }
 
-pub fn set_ports(block_name: &str, ports: Vec<micrortu_build_utils::Port>) -> Result<(), ()> {
+/// Returns previous ports, if any
+pub fn set_ports(
+    block_name: &str,
+    ports: Vec<micrortu_build_utils::Port>,
+) -> Option<Vec<micrortu_build_utils::Port>> {
     let crate_name = std::env::var("CARGO_PKG_NAME").unwrap();
     let key = (block_name.to_string(), crate_name.clone());
-    let prev = PORTS.lock().expect("poison").insert(key, ports);
-    if prev.is_some() {
-        return Err(());
-    }
-    Ok(())
+    PORTS.lock().expect("poison").insert(key, ports)
 }
 
-pub fn set_params(block_name: &str, params: Vec<micrortu_build_utils::Port>) -> Result<(), ()> {
+/// Returns previous params, if any
+pub fn set_params(
+    block_name: &str,
+    params: Vec<micrortu_build_utils::Port>,
+) -> Option<Vec<micrortu_build_utils::Port>> {
     let crate_name = std::env::var("CARGO_PKG_NAME").unwrap();
     let key = (block_name.to_string(), crate_name.clone());
-    let prev = PARAMS.lock().expect("poison").insert(key, params);
-    if prev.is_some() {
-        return Err(());
-    }
-    Ok(())
+    PARAMS.lock().expect("poison").insert(key, params)
 }
 
 pub fn get_block_conf(block_name: &str) -> Option<BlockConf> {
@@ -54,24 +55,19 @@ pub fn get_block_conf(block_name: &str) -> Option<BlockConf> {
     BLOCK_CONFIGS.lock().expect("poison").get(&key).cloned()
 }
 
-pub fn set_block_conf(block_name: &str, block_conf: BlockConf) -> Result<(), ()> {
+/// Returns previous block conf, if any
+pub fn set_block_conf(block_name: &str, block_conf: BlockConf) -> Option<BlockConf> {
     let crate_name = std::env::var("CARGO_PKG_NAME").unwrap();
     let key = (block_name.to_string(), crate_name.clone());
     let mut prev = BLOCK_CONFIGS.lock().expect("poison");
-    if prev.insert(key, block_conf).is_some() {
-        return Err(());
-    }
-    Ok(())
+    prev.insert(key, block_conf)
 }
 
-pub fn set_block(block_name: &str, block: Block) -> Result<(), ()> {
+/// Returns previous block, if any
+pub fn set_block(block_name: &str, block: Block) -> Option<Block> {
     let crate_name = std::env::var("CARGO_PKG_NAME").unwrap();
     let key = (block_name.to_string(), crate_name.clone());
-    let prev = BLOCKS.lock().expect("poison").insert(key, block);
-    if prev.is_some() {
-        return Err(());
-    }
-    Ok(())
+    BLOCKS.lock().expect("poison").insert(key, block)
 }
 
 pub fn get_blocks() -> Vec<Block> {

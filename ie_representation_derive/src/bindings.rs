@@ -11,7 +11,7 @@ use syn::{
     Attribute, Ident, LitInt, Meta, MetaList, Token, Visibility,
 };
 
-use crate::state::{set_params, set_ports};
+use crate::state::{set_params, set_ports, should_bail_on_duplicates};
 
 struct Port {
     attrs: Vec<Attribute>,
@@ -313,7 +313,7 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             set_params(&block_name, meta_bindings.clone())
         };
 
-        if res.is_err() {
+        if res.is_some() && should_bail_on_duplicates() {
             errors.push(syn::Error::new_spanned(
                 block_name.clone(),
                 format!("Bindings are already defined for block `{block_name}`"),
