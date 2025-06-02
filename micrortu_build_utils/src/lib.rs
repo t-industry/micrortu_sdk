@@ -34,7 +34,7 @@ pub struct Block {
     pub block_conf: Option<BlockConf>,
 }
 
-#[derive(Serialize, JsonSchema, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, JsonSchema, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum Direction {
     In,
@@ -42,7 +42,7 @@ pub enum Direction {
     InOut,
 }
 
-#[derive(Serialize, JsonSchema, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, JsonSchema, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 #[serde(rename_all = "lowercase")]
 pub enum IEType {
@@ -127,7 +127,7 @@ impl TryFrom<NativeBindingDefinition<'static>> for Port {
     }
 }
 
-#[derive(Serialize, JsonSchema, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, JsonSchema, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum AllowedType {
     U8,
