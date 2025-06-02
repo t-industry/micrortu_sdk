@@ -378,7 +378,7 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             _marker: ::core::marker::PhantomData<&'a ()>,
         }
 
-        impl<'a> BlockPorts<'a> for #struct_name<'a> {
+        impl<'a> ::micrortu_sdk::BlockPorts<'a> for #struct_name<'a> {
             #parse
             #report
         }
