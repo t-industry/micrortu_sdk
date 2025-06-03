@@ -212,20 +212,6 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             IEType::TI203 => quote! { TI203 },
         };
         let typ = quote! { ::micrortu_sdk::ie_base::#typ };
-
-        names.push(match (is_multiple, is_optional) {
-            (true, true) => quote! { #(#attrs)* pub #name: Option<&'a mut [#typ]> },
-            (true, false) => quote! { #(#attrs)* pub #name: &'a mut [#typ] },
-            (false, true) => quote! { #(#attrs)* pub #name: Option<&'a mut #typ> },
-            (false, false) => quote! { #(#attrs)* pub #name: &'a mut #typ },
-        });
-
-        let min_size = port.lower_bound as u8;
-        let max_size = port
-            .upper_bound
-            .map_or(quote! { None }, |m| quote! { Some(#m as u8) });
-        let flags = !is_optional as u8;
-
         let direction = match mode_str.as_str() {
             "In" => Direction::In,
             "Out" => Direction::Out,
@@ -238,6 +224,24 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
                 Direction::In
             }
         };
+        let has_out = matches!(direction, Direction::Out | Direction::InOut);
+
+        names.push(match (is_multiple, is_optional, has_out) {
+            (true, true, true) => quote! { #(#attrs)* pub #name: Option<&'a mut [#typ]> },
+            (true, false, true) => quote! { #(#attrs)* pub #name: &'a mut [#typ] },
+            (false, true, true) => quote! { #(#attrs)* pub #name: Option<&'a mut #typ> },
+            (false, false, true) => quote! { #(#attrs)* pub #name: &'a mut #typ },
+            (true, true, false) => quote! { #(#attrs)* pub #name: Option<&'a [#typ]> },
+            (true, false, false) => quote! { #(#attrs)* pub #name: &'a [#typ] },
+            (false, true, false) => quote! { #(#attrs)* pub #name: Option<&'a #typ> },
+            (false, false, false) => quote! { #(#attrs)* pub #name: &'a #typ },
+        });
+
+        let min_size = port.lower_bound as u8;
+        let max_size = port
+            .upper_bound
+            .map_or(quote! { None }, |m| quote! { Some(#m as u8) });
+        let flags = !is_optional as u8;
 
         let name_str = name.to_string();
 
