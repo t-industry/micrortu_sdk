@@ -212,6 +212,14 @@ impl SmallIE {
     }
 
     #[must_use]
+    pub const fn size_for_typecode(typecode: u8) -> usize {
+        match Self::default_for_typecode(typecode) {
+            Some(v) => map_small_ie!(&v, T, const || -> (usize) core::mem::size_of::<T>()),
+            None => 0,
+        }
+    }
+
+    #[must_use]
     pub const fn align_for_typecode(typecode: u8) -> usize {
         match Self::default_for_typecode(typecode) {
             Some(v) => map_small_ie!(&v, T, const || -> (usize) core::mem::align_of::<T>()),
