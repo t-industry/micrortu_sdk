@@ -225,6 +225,7 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             }
         };
         let has_out = matches!(direction, Direction::Out | Direction::InOut);
+        let has_in = matches!(direction, Direction::In | Direction::InOut);
 
         names.push(match (is_multiple, is_optional, has_out) {
             (true, true, true) => quote! { #(#attrs)* pub #name: Option<&'a mut [#typ]> },
@@ -302,6 +303,9 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
                 let max_size: u8 = #max_size.unwrap();
                 ::micrortu_sdk::error!("Got {} elements, expected at most {}", len, max_size);
                 return Err(::micrortu_sdk::ParseError::TooMuchData);
+            }
+            if !#has_in {
+                assert!(data.iter().all(|&b| b == 0), "OUT port/param is not zeroed");
             }
             let value = <#typ as ::zerocopy::FromBytes>::mut_slice_from(&mut data[pad..]);
             let mut value = value.ok_or(::micrortu_sdk::ParseError::InvalidData)?;
