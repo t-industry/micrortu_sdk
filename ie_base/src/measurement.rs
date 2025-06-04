@@ -166,6 +166,12 @@ impl QDS {
     pub const BAD: Self = Self {
         raw: RawQualityDescriptor(0xC0),
     };
+    pub const INVALID: Self = Self {
+        raw: RawQualityDescriptor::INVALID,
+    };
+    pub const NONTOPICAL: Self = Self {
+        raw: RawQualityDescriptor::NONTOPICAL,
+    };
 }
 
 impl SIQ {
