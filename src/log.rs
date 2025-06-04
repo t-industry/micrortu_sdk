@@ -110,12 +110,12 @@ macro_rules! info {
 #[macro_export]
 macro_rules! debug {
     ($($arg:tt)*) => {
-        ::micrortu_sdk::log!(4, &format_args!($($arg)*))
+        ::micrortu_sdk::log!(4, $($arg)*)
     }
 }
 #[macro_export]
 macro_rules! trace {
     ($($arg:tt)*) => {
-        ::micrortu_sdk::log!(5, &format_args!($($arg)*))
+        ::micrortu_sdk::log!(5, $($arg)*)
     }
 }
