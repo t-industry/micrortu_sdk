@@ -65,7 +65,7 @@ impl uWrite for LogWriter {
     }
 }
 
-#[cfg(not(feature = "home"))]
+#[cfg(not(feature = "micrortu_sdk_internal"))]
 #[macro_export]
 macro_rules! log {
     ($level:expr, $($arg:tt)*) => {{
@@ -74,7 +74,7 @@ macro_rules! log {
     }}
 }
 
-#[cfg(feature = "home")]
+#[cfg(feature = "micrortu_sdk_internal")]
 #[macro_export]
 macro_rules! log {
     ($level:expr, $($arg:tt)*) => {{

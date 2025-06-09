@@ -162,7 +162,10 @@ pub fn wasm_unwrap<T>(v: Option<T>) -> T {
     }
 }
 
-pub trait Config: zerocopy::FromBytes + zerocopy::AsBytes {}
+pub trait Config: zerocopy::FromBytes + zerocopy::AsBytes {
+    #[cfg(feature = "std")]
+    fn config_schema() -> micrortu_build_utils::BlockConf;
+}
 
 pub trait BlockPorts<'a>: Sized {
     fn parse_fallible(source: &'a mut [u8]) -> Result<Self, ParseError>;

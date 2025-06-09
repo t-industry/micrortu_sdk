@@ -3,7 +3,10 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Fields, Meta, MetaList, Type};
 
-use crate::{bindings::parse_block_names, state::{set_block_conf, should_bail_on_duplicates}};
+use crate::{
+    bindings::parse_block_names,
+    state::{set_block_conf, should_bail_on_duplicates},
+};
 
 pub fn derive_config(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -62,8 +65,41 @@ pub fn derive_config(input: TokenStream) -> TokenStream {
 
     let init_fn_name = format!("_init_{name}");
     let init_fn_name = syn::Ident::new(&init_fn_name, name.span());
+    let is_native = cfg!(feature = "micrortu_sdk_internal");
+    let baked_in = block_conf
+        .fields
+        .iter()
+        .map(|(field_name, field_type)| {
+            let field_type_ident = match field_type {
+                AllowedType::U8 => quote! { ::micrortu_build_utils::AllowedType::U8 },
+                AllowedType::U16 => quote! { ::micrortu_build_utils::AllowedType::U16 },
+                AllowedType::U32 => quote! { ::micrortu_build_utils::AllowedType::U32 },
+                AllowedType::U64 => quote! { ::micrortu_build_utils::AllowedType::U64 },
+                AllowedType::I8 => quote! { ::micrortu_build_utils::AllowedType::I8 },
+                AllowedType::I16 => quote! { ::micrortu_build_utils::AllowedType::I16 },
+                AllowedType::I32 => quote! { ::micrortu_build_utils::AllowedType::I32 },
+                AllowedType::I64 => quote! { ::micrortu_build_utils::AllowedType::I64 },
+                AllowedType::F32 => quote! { ::micrortu_build_utils::AllowedType::F32 },
+                AllowedType::F64 => quote! { ::micrortu_build_utils::AllowedType::F64 },
+            };
+            quote! { (#field_name.into(), #field_type_ident) }
+        });
+
+    let baked_in = if is_native {
+        quote! {
+            #[cfg(feature = "std")]
+            fn config_schema() -> ::micrortu_build_utils::BlockConf {
+                ::micrortu_build_utils::BlockConf {
+                    fields: vec![#(#baked_in),*],
+                }
+            }
+        }
+    } else {
+        quote! {}
+    };
+
     let output = quote! {
-        impl ::micrortu_sdk::Config for #name {}
+        impl ::micrortu_sdk::Config for #name { #baked_in }
 
         #[allow(dead_code)]
         #[allow(non_snake_case)]

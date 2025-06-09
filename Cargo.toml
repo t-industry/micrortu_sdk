@@ -18,7 +18,10 @@ license = "MIT OR Apache-2.0"
 description = "SDK for MicroRTU"
 
 [features]
-home = []
+# Adds generated config schema to `Config` trait. Used by `micrortu_tool`.
+std = ["dep:micrortu_build_utils"]
+# Forwards feature, impls `Sync` for allocator and uses `log` crate.
+micrortu_sdk_internal = ["ie_representation_derive/micrortu_sdk_internal"]
 
 [workspace.dependencies]
 zerocopy = { version = "0.7.32", features = ["derive"], default-features = false }
@@ -58,6 +61,7 @@ resolver = "2"
 ie_base.workspace = true
 ie_representation_derive.workspace = true
 wasm_global_shared_data.workspace = true
+micrortu_build_utils = { workspace = true, optional = true }
 log = "0.4.20"
 zerocopy.workspace = true
 ufmt = "0.2.0"
