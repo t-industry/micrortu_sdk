@@ -1,0 +1,2 @@
+[template]
+include = ["Cargo.toml", "src", "src/**", "conf.json", ".cargo"]

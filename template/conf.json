@@ -1,0 +1,32 @@
+{
+    "version": [0, 0, 1],
+    "base_control_period_milliseconds": 100,
+    "address_space": [
+        { "name": "count", "ca": [1, 1], "ioa": [0, 0, 1], "ti": 13, "initial_value": 0.0 },
+    ],
+    "process_list": [
+        {
+            "name": "p1",
+            "control_period_multiplier": 1,
+            "block_instances": [
+                {
+                    "name": "custom_wasm_counter",
+                    "type_id": "counter",
+                    "is_wasm": true,
+                    "port_binding": {
+                        "count": [ { "name": "count" } ],
+                    },
+                    "configuration": {
+                        "num": 0
+                    }
+                }
+            ]
+        },
+    ],
+    "local_io": {
+        "A5": { "range": "NI1000" },
+        "A6": { "range": "NI1000" },
+        "U1": { "range": "0_10V" },
+        "U2": { "range": "0_10V" }
+    }
+}

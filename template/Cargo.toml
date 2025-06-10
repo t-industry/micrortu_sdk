@@ -1,0 +1,21 @@
+[package]
+name = "{{project-name}}"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+panic = "abort"
+opt-level = "z"
+strip = true
+lto = true
+codegen-units = 1
+
+[dependencies]
+micrortu_sdk = "0.5.11"
+static_cell = "2.1.0"
+ufmt = "0.2.0"
+zerocopy = "0.8.25"
+
