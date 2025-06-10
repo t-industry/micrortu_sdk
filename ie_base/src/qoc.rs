@@ -1,6 +1,6 @@
 use bitfield::{Bit, BitMut, BitRange, BitRangeMut};
 use const_default::ConstDefault;
-use zerocopy::{AsBytes, FromBytes, FromZeroes};
+use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 #[cfg(feature = "rkyv")]
 use {
@@ -20,7 +20,7 @@ pub enum QU {
 
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
-#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
 #[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 pub struct RawQualifierOfCommand(pub u8);

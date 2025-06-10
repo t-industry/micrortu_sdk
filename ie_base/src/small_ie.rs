@@ -231,7 +231,7 @@ impl SmallIE {
     /// Not includes typecode
     #[must_use]
     pub fn as_mut_bytes(&mut self) -> &mut [u8] {
-        map_small_ie!(self, T, |&mut it| -> (&mut [u8]) it.as_bytes_mut())
+        map_small_ie!(self, T, |&mut it| -> (&mut [u8]) it.as_mut_bytes())
     }
 
     /// Returns bytes to underlying value

@@ -1,6 +1,6 @@
 use bitfield::{Bit, BitMut, BitRange, BitRangeMut};
 use const_default::ConstDefault;
-use zerocopy::{AsBytes, FromBytes, FromZeroes};
+use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 #[cfg(feature = "rkyv")]
 use {
@@ -8,7 +8,8 @@ use {
     rkyv::{Archive, Portable, Serialize},
 };
 
-#[derive(Debug, Clone, Copy, Default, ConstDefault, AsBytes, FromZeroes, FromBytes)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)]
 #[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
 #[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 #[repr(transparent)]

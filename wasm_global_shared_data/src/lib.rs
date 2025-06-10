@@ -2,19 +2,19 @@
 
 use core::num::NonZeroU8;
 use ufmt::derive::uDebug;
-use zerocopy::{AsBytes, FromBytes, FromZeroes};
+use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 pub use ie_base::IEBuf;
 
 pub const BINDINGS_BYTES_CAP: usize = 512;
 
 #[repr(C, align(8))]
-#[derive(AsBytes, FromZeroes, FromBytes, Debug)]
+#[derive(IntoBytes, FromBytes, KnownLayout, Immutable, Debug)]
 pub struct Config(pub [u8; 504]);
 
 /// Shared data between the wasm module and the host.
 #[repr(C, align(8))]
-#[derive(AsBytes, FromZeroes, FromBytes, Debug)]
+#[derive(IntoBytes, FromBytes, KnownLayout, Immutable, Debug)]
 pub struct Shared {
     pub latched_params: [u8; BINDINGS_BYTES_CAP],
     pub latched_ports: [u8; BINDINGS_BYTES_CAP],
@@ -22,7 +22,7 @@ pub struct Shared {
 
 /// Shared data between the wasm module and the host.
 #[repr(C, align(8))]
-#[derive(AsBytes, FromZeroes, FromBytes, Debug)]
+#[derive(IntoBytes, FromBytes, KnownLayout, Immutable, Debug)]
 pub struct FactoryInput {
     pub control_period_ms: u32,
     pub config_len: u32,
@@ -50,7 +50,8 @@ pub enum ParseError {
 /// Meaningful values are `IN`, `OUT`, `IN_OUT`.
 /// All other values are invalid, but safe.
 #[repr(C)]
-#[derive(Debug, AsBytes, FromZeroes, FromBytes, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)] //
+#[derive(IntoBytes, FromBytes, KnownLayout, Immutable)] //
 pub struct Direction(pub u8);
 
 /// The result of a step. `0` means success, anything else is an error.
@@ -108,7 +109,8 @@ impl Shared {
 /// };
 /// ```
 #[repr(C)]
-#[derive(Debug, AsBytes, FromZeroes, FromBytes, Clone, Copy)]
+#[derive(Debug, Clone, Copy)] //
+#[derive(IntoBytes, FromBytes, KnownLayout, Immutable)]
 pub struct BindingDefinition {
     pub name_offset: u16,
     pub flags: u8,
@@ -160,7 +162,7 @@ impl BindingDefinition {
 #[cfg(test)]
 mod test {
     use crate::Shared;
-    use zerocopy::{AsBytes, FromZeroes};
+    use zerocopy::{FromZeros, IntoBytes};
 
     #[test]
     fn assert_shared_default_zeroed() {

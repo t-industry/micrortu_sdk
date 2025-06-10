@@ -24,7 +24,7 @@ std = ["dep:micrortu_build_utils"]
 micrortu_sdk_internal = ["ie_representation_derive/micrortu_sdk_internal"]
 
 [workspace.dependencies]
-zerocopy = { version = "0.7.32", features = ["derive"], default-features = false }
+zerocopy = { version = "0.8.25", features = ["derive"], default-features = false }
 
 [workspace.dependencies.ie_base]
 package = "micrortu_ie_base"

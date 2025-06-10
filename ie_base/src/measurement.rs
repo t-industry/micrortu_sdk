@@ -3,7 +3,7 @@
 use bitfield::{Bit, BitMut, BitRange, BitRangeMut};
 use const_default::ConstDefault;
 use int_enum::IntEnum;
-use zerocopy::{AsBytes, FromBytes, FromZeroes};
+use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 #[cfg(feature = "rkyv")]
 use {
@@ -15,7 +15,8 @@ use crate::{impl_qds_for, qds::QualityDescriptorHolder, RawQualityDescriptor};
 
 /// TI1, `M_SP_NA_1`, Single-point information without time tag
 #[repr(C)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct M_SP_NA_1 {
     pub value: SIQ,
@@ -23,7 +24,8 @@ pub struct M_SP_NA_1 {
 
 /// TI3, `M_DP_NA_1`, Double-point information without time tag
 #[repr(C)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct M_DP_NA_1 {
     pub value: DIQ,
@@ -31,7 +33,8 @@ pub struct M_DP_NA_1 {
 
 /// TI11, `M_ME_NB_1`, Measured value, scaled value
 #[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct M_ME_NB_1 {
     pub value: i16,
@@ -40,7 +43,8 @@ pub struct M_ME_NB_1 {
 
 /// TI13, `M_ME_NC_1`, Measured value, short floating point number
 #[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct M_ME_NE_1 {
     pub value: f32,
@@ -49,7 +53,8 @@ pub struct M_ME_NE_1 {
 
 /// TI136, Measured value, 32-bit unsigned integer
 #[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct TI136 {
     pub value: u32,
@@ -58,7 +63,8 @@ pub struct TI136 {
 
 /// TI137, Measured value, 32-bit signed integer
 #[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct TI137 {
     pub value: i32,
@@ -67,7 +73,8 @@ pub struct TI137 {
 
 /// TI138, Measured value, 64-bit unsigned integer
 #[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct TI138 {
     pub value: u64,
@@ -76,7 +83,8 @@ pub struct TI138 {
 
 /// TI139, Measured value, 64-bit signed integer
 #[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromZeroes, FromBytes)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 pub struct TI139 {
     pub value: i64,
@@ -85,7 +93,7 @@ pub struct TI139 {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
-#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
 #[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 pub struct SIQ {
@@ -94,7 +102,7 @@ pub struct SIQ {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
-#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
 #[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 pub struct QDS {
@@ -103,7 +111,7 @@ pub struct QDS {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
-#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
 #[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 pub struct DIQ {

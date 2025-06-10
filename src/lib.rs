@@ -8,9 +8,7 @@ Provides utilities to create wasm blocks for MicroRTU.
 This is a basic example of a block that adds two numbers.
 
 ```rust
-use micrortu_sdk::{
-    params, ports, register_block, Shared, StepResult, FactoryInput
-};
+use micrortu_sdk::{BlockPorts, FactoryInput, Shared, StepResult, params, ports, register_block};
 use static_cell::StaticCell;
 
 pub struct Counter;
@@ -26,7 +24,7 @@ params! {
     pub struct Params {}
 }
 
-pub fn factory(_: &mut FactoryInput) -> Option<&'static mut Counter> {
+pub fn factory(_: &FactoryInput) -> Option<&'static mut Counter> {
     static COUTNER: StaticCell<Counter> = StaticCell::new();
     Some(COUTNER.init(Counter))
 }
@@ -36,7 +34,7 @@ pub fn init(_: &mut Shared, _: &mut Counter) -> StepResult {
 }
 
 pub fn step(shared: &mut Shared, _: &mut Counter) -> StepResult {
-    let mut ports = Ports::parse(&mut shared.latched_ports[..]);
+    let ports = Ports::parse(&mut shared.latched_ports[..]);
 
     ports.count.value += 1.;
 
@@ -44,10 +42,12 @@ pub fn step(shared: &mut Shared, _: &mut Counter) -> StepResult {
 }
 
 register_block!(Counter, counter, factory, init, step);
-
 ```
 
-## WASM Binary Layout
+## WASM Binary Layout for Non-Rust builds
+
+If you don't want to use Rust and `micrortu_sdk` macros, you can still create
+a wasm block for MicroRTU. The binary layout of the wasm blob must be as follows:
 
 To define block `block_name`, that can be later referenced in MicroRTU
 configuration, you need export 3 functions from your final wasm blob.
@@ -162,7 +162,7 @@ pub fn wasm_unwrap<T>(v: Option<T>) -> T {
     }
 }
 
-pub trait Config: zerocopy::FromBytes + zerocopy::AsBytes {
+pub trait Config: zerocopy::FromBytes + zerocopy::IntoBytes {
     #[cfg(feature = "std")]
     fn config_schema() -> micrortu_build_utils::BlockConf;
 }

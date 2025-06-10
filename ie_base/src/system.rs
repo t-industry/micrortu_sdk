@@ -1,6 +1,6 @@
 use const_default::ConstDefault;
 use int_enum::IntEnum;
-use zerocopy::{AsBytes, FromBytes, FromZeroes};
+use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 #[cfg(feature = "rkyv")]
 use {
@@ -11,7 +11,7 @@ use {
 /// TI100, `C_IC_NA_1`, Interrogation command
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, Eq)] //
-#[derive(AsBytes, FromZeroes, FromBytes)]
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)]
 #[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
 #[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 #[repr(transparent)]
@@ -22,7 +22,7 @@ pub struct C_IC_NA_1 {
 /// TI102, `C_RD_NA_1`, Read command
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, Eq)] //
-#[derive(AsBytes, FromZeroes, FromBytes)]
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)]
 #[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
 #[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 #[repr(transparent)]
@@ -31,7 +31,7 @@ pub struct C_RD_NA_1 {}
 /// TI104, `C_TS_NA_1`, Test command
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, Eq)] //
-#[derive(AsBytes, FromZeroes, FromBytes)]
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)]
 #[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
 #[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 #[repr(C)]

@@ -1,4 +1,4 @@
-use zerocopy::{AsBytes, FromBytes, FromZeroes};
+use zerocopy::{IntoBytes, FromBytes, FromZeros};
 
 use crate::SmallIE;
 use core::mem::size_of;
@@ -7,7 +7,7 @@ static_assertions::assert_eq_size!(SmallIE, IEBuf);
 static_assertions::assert_eq_align!(SmallIE, IEBuf);
 
 #[repr(C)]
-#[derive(Default, Debug, Clone, Copy, PartialEq, AsBytes, FromBytes, FromZeroes)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, IntoBytes, FromBytes)]
 pub struct IEBuf(pub [u8; size_of::<SmallIE>()]);
 
 impl IEBuf {
@@ -68,7 +68,7 @@ impl From<SmallIE> for IEBuf {
     fn from(value: SmallIE) -> Self {
         let d = value.typecode();
         let mut this = Self::new_zeroed();
-        let bytes = Self::as_bytes_mut(&mut this);
+        let bytes = Self::as_mut_bytes(&mut this);
         bytes[0] = d;
         value
             .copy_to_slice(&mut bytes[1..])

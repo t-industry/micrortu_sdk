@@ -1,16 +1,18 @@
 use const_default::ConstDefault;
-use zerocopy::{AsBytes, FromBytes};
+use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 use crate::{
-    SmallIE, C_SC_NA_1, C_SE_NB_1, C_SE_NC_1, M_DP_NA_1, M_ME_NB_1, M_ME_NE_1, M_SP_NA_1, P_ME_NC_1, TI136,
-    TI137, TI138, TI139, TI200, TI201, TI202, TI203,
+    SmallIE, C_SC_NA_1, C_SE_NB_1, C_SE_NC_1, M_DP_NA_1, M_ME_NB_1, M_ME_NE_1, M_SP_NA_1,
+    P_ME_NC_1, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203,
 };
 
 pub struct IE<const TYPECODE: u8>;
 
 pub trait IEMeta:
     FromBytes
-    + AsBytes
+    + KnownLayout
+    + Immutable
+    + IntoBytes
     + Into<SmallIE>
     + PartialEq
     + Copy

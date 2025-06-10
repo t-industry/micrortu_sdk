@@ -1,7 +1,7 @@
 use bitfield::{bitfield_bitrange, bitfield_fields};
 use const_default::ConstDefault;
 use int_enum::IntEnum;
-use zerocopy::{AsBytes, FromBytes, FromZeroes};
+use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 #[cfg(feature = "rkyv")]
 use {
@@ -11,7 +11,8 @@ use {
 
 #[repr(C, packed)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq, AsBytes, FromBytes, FromZeroes)]
+#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(CheckBytes))]
 /// TI112, `P_ME_NC_1`, Parameter of measured values, short floating point number
 pub struct P_ME_NC_1 {
@@ -21,7 +22,7 @@ pub struct P_ME_NC_1 {
 
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
-#[derive(AsBytes, FromZeroes, FromBytes)] //
+#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
 #[cfg_attr(feature = "rkyv", rkyv(as = Self))]
 pub struct QPM(pub u8);

@@ -307,8 +307,8 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             if !#has_in {
                 assert!(data.iter().all(|&b| b == 0), "OUT port/param is not zeroed");
             }
-            let value = <#typ as ::zerocopy::FromBytes>::mut_slice_from(&mut data[pad..]);
-            let mut value = value.ok_or(::micrortu_sdk::ParseError::InvalidData)?;
+            let value = <[#typ] as ::zerocopy::FromBytes>::mut_from_bytes(&mut data[pad..]);
+            let mut value = value.map_err(|_| ::micrortu_sdk::ParseError::InvalidData)?;
             #ret
           },
         });
