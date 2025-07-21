@@ -7,6 +7,17 @@ Provides utilities to create wasm blocks for MicroRTU.
 
 Documentation can be generated via `cargo doc --open` command.
 
+## Template
+
+To generate a simple project, use that command. You should have [cargo-generate]
+installed.
+
+```bash
+cargo generate --git https://github.com/t-industry/micrortu_sdk
+```
+
+[cargo-generate]: https://github.com/cargo-generate/cargo-generate
+
 ## Example
 
 This is a basic example of a block that adds two numbers.
