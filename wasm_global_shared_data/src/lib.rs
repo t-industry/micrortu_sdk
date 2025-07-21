@@ -147,7 +147,7 @@ impl BindingDefinition {
 
 impl BindingDefinition {
     #[must_use]
-    pub fn into_native(self, collected_names: &[u8]) -> Option<NativeBindingDefinition> {
+    pub fn into_native(self, collected_names: &[u8]) -> Option<NativeBindingDefinition<'_>> {
         Some(NativeBindingDefinition {
             name: self.name(collected_names)?,
             typ: self.typ,
