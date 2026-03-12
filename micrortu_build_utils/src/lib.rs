@@ -142,7 +142,13 @@ pub enum AllowedType {
     F64,
 }
 
+fn default_required() -> bool {
+    true
+}
+
 #[derive(Serialize, JsonSchema, Validate, Deserialize, Clone, Debug)]
 pub struct BlockConf {
+    #[serde(default = "default_required")]
+    pub required: bool,
     pub fields: Vec<(String, AllowedType)>,
 }

@@ -35,11 +35,17 @@ pub fn register_block(input: TokenStream) -> TokenStream {
 }
 
 /// Derive macro for `Config` trait.
+///
 /// If block requires some configuration, it should be derived from `Config` trait.
 /// It requires type to be `AsBytes` and `FromBytes`. Firmware will pass slice
 /// of bytes and you should be able to call `from_bytes` method on it to get the
 /// configuration. For C code you should be able to cast a pointer to your struct.
-#[proc_macro_derive(Config, attributes(block_names))]
+///
+/// ## Attributes
+///
+/// - `block_names`: the list of blocks with that configuration.
+/// - `required`: whether user is required to provide this conf (true by default).
+#[proc_macro_derive(Config, attributes(block_names, required))]
 pub fn derive_config(input: TokenStream) -> TokenStream {
     config::derive_config(input)
 }

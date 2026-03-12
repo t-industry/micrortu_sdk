@@ -1,7 +1,7 @@
 use micrortu_build_utils::{AllowedType, BlockConf};
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Fields, Meta, MetaList, Type};
+use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Fields, Meta, Type};
 
 use crate::{
     bindings::parse_block_names,
@@ -11,12 +11,26 @@ use crate::{
 pub fn derive_config(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let mut block_names = vec![];
+    let mut required = true;
     for attr in &input.attrs {
         match &attr.meta {
-            Meta::List(MetaList { path, tokens, .. })
-                if path.get_ident().map_or(false, |i| *i == "block_names") =>
-            {
-                parse_block_names(tokens.clone().into(), &mut block_names);
+            Meta::List(it) if it.path.get_ident().map_or(false, |i| *i == "block_names") => {
+                parse_block_names(it.tokens.clone().into(), &mut block_names);
+            }
+            Meta::NameValue(it) if it.path.get_ident().is_some_and(|i| *i == "required") => {
+                match &it.value {
+                    syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Bool(value),
+                        ..
+                    }) => required = value.value,
+                    _ => {
+                        let error = syn::Error::new_spanned(
+                            attr,
+                            "Invalid attribute value. It must be of form #[required = <bool>]",
+                        );
+                        return error.to_compile_error().into();
+                    }
+                }
             }
             _ => (),
         }
@@ -51,7 +65,7 @@ pub fn derive_config(input: TokenStream) -> TokenStream {
         }
     };
 
-    let block_conf = BlockConf { fields };
+    let block_conf = BlockConf { required, fields };
 
     for block_name in block_names {
         let res = set_block_conf(&block_name, block_conf.clone());
@@ -66,24 +80,21 @@ pub fn derive_config(input: TokenStream) -> TokenStream {
     let init_fn_name = format!("_init_{name}");
     let init_fn_name = syn::Ident::new(&init_fn_name, name.span());
     let is_native = cfg!(feature = "micrortu_sdk_internal");
-    let baked_in = block_conf
-        .fields
-        .iter()
-        .map(|(field_name, field_type)| {
-            let field_type_ident = match field_type {
-                AllowedType::U8 => quote! { ::micrortu_build_utils::AllowedType::U8 },
-                AllowedType::U16 => quote! { ::micrortu_build_utils::AllowedType::U16 },
-                AllowedType::U32 => quote! { ::micrortu_build_utils::AllowedType::U32 },
-                AllowedType::U64 => quote! { ::micrortu_build_utils::AllowedType::U64 },
-                AllowedType::I8 => quote! { ::micrortu_build_utils::AllowedType::I8 },
-                AllowedType::I16 => quote! { ::micrortu_build_utils::AllowedType::I16 },
-                AllowedType::I32 => quote! { ::micrortu_build_utils::AllowedType::I32 },
-                AllowedType::I64 => quote! { ::micrortu_build_utils::AllowedType::I64 },
-                AllowedType::F32 => quote! { ::micrortu_build_utils::AllowedType::F32 },
-                AllowedType::F64 => quote! { ::micrortu_build_utils::AllowedType::F64 },
-            };
-            quote! { (#field_name.into(), #field_type_ident) }
-        });
+    let baked_in = block_conf.fields.iter().map(|(field_name, field_type)| {
+        let field_type_ident = match field_type {
+            AllowedType::U8 => quote! { ::micrortu_build_utils::AllowedType::U8 },
+            AllowedType::U16 => quote! { ::micrortu_build_utils::AllowedType::U16 },
+            AllowedType::U32 => quote! { ::micrortu_build_utils::AllowedType::U32 },
+            AllowedType::U64 => quote! { ::micrortu_build_utils::AllowedType::U64 },
+            AllowedType::I8 => quote! { ::micrortu_build_utils::AllowedType::I8 },
+            AllowedType::I16 => quote! { ::micrortu_build_utils::AllowedType::I16 },
+            AllowedType::I32 => quote! { ::micrortu_build_utils::AllowedType::I32 },
+            AllowedType::I64 => quote! { ::micrortu_build_utils::AllowedType::I64 },
+            AllowedType::F32 => quote! { ::micrortu_build_utils::AllowedType::F32 },
+            AllowedType::F64 => quote! { ::micrortu_build_utils::AllowedType::F64 },
+        };
+        quote! { (#field_name.into(), #field_type_ident) }
+    });
 
     let baked_in = if is_native {
         quote! {
