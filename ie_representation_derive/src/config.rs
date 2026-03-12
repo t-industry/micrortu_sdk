@@ -101,6 +101,7 @@ pub fn derive_config(input: TokenStream) -> TokenStream {
             #[cfg(feature = "std")]
             fn config_schema() -> ::micrortu_build_utils::BlockConf {
                 ::micrortu_build_utils::BlockConf {
+                    required: #required,
                     fields: vec![#(#baked_in),*],
                 }
             }
