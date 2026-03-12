@@ -15,7 +15,7 @@ assert_eq!(trap, Err(2));
 */
 pub trait TrapErrExt: Sized + Iterator {
     type Trap;
-    fn trap_err(self, trap: &mut Result<(), Self::Trap>) -> TrapErrIter<Self, Self::Trap>;
+    fn trap_err(self, trap: &mut Result<(), Self::Trap>) -> TrapErrIter<'_, Self, Self::Trap>;
 }
 
 impl<It, T, E> TrapErrExt for It
@@ -24,7 +24,7 @@ where
 {
     type Trap = E;
 
-    fn trap_err(self, trap: &mut Result<(), Self::Trap>) -> TrapErrIter<Self, Self::Trap> {
+    fn trap_err(self, trap: &mut Result<(), Self::Trap>) -> TrapErrIter<'_, Self, Self::Trap> {
         TrapErrIter {
             iter: Some(self),
             trap,
