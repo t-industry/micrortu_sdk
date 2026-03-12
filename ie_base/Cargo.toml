@@ -16,7 +16,7 @@ rkyv = ["dep:rkyv", "dep:bytecheck"]
 zerocopy = { workspace = true }
 static_assertions = "1.1.0"
 const-default = { version = "1.0", default-features = false, features = ["derive", "const-default-derive" ] }
-bitfield = "0"
+bitfield = "0.19"
 int-enum = { version = "1.1.1", default-features = false }
 num = { version = "0.4", default-features = false, features = ["libm"] }
 rkyv = { version = "0.8.10", default-features = false, features = ["bytecheck", "little_endian"], optional = true }
