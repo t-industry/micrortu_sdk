@@ -48,6 +48,11 @@ impl CA {
     pub fn matches(&self, filter: Self) -> bool {
         filter.is_broadcast() || *self == filter
     }
+
+    #[must_use]
+    pub const fn const_eq(self, other: Self) -> bool {
+        self.0 == other.0 && self.1 == other.1
+    }
 }
 
 impl IOA {
@@ -68,6 +73,11 @@ impl IOA {
     #[must_use]
     pub fn inc(&self) -> Self {
         Self::from_unstructured(self.as_unstructured() + 1)
+    }
+
+    #[must_use]
+    pub const fn const_eq(self, other: Self) -> bool {
+        self.0 == other.0 && self.1 == other.1 && self.2 == other.2
     }
 }
 
