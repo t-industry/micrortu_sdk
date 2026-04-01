@@ -199,6 +199,7 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
             IEType::TI11 => quote! { M_ME_NB_1 },
             IEType::TI13 => quote! { M_ME_NE_1 },
             IEType::TI45 => quote! { C_SC_NA_1 },
+            IEType::TI46 => quote! { C_DC_NA_1 },
             IEType::TI49 => quote! { C_SE_NB_1 },
             IEType::TI50 => quote! { C_SE_NC_1 },
             IEType::TI112 => quote! { P_ME_NC_1 },

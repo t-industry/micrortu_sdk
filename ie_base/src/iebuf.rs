@@ -1,6 +1,6 @@
-use zerocopy::{IntoBytes, FromBytes, FromZeros};
+use zerocopy::{FromBytes, FromZeros, IntoBytes};
 
-use crate::SmallIE;
+use crate::{IeType, SmallIE};
 use core::mem::size_of;
 
 static_assertions::assert_eq_size!(SmallIE, IEBuf);
@@ -13,7 +13,7 @@ pub struct IEBuf(pub [u8; size_of::<SmallIE>()]);
 impl IEBuf {
     #[must_use]
     pub fn is_valid(self) -> bool {
-        SmallIE::default_for_typecode(self.0[0]).is_some()
+        IeType::new(self.0[0]).is_ok()
     }
 
     #[must_use]
@@ -25,10 +25,17 @@ impl IEBuf {
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct IEDeserializationError;
 
+impl From<crate::InvalidIeType> for IEDeserializationError {
+    fn from(_: crate::InvalidIeType) -> Self {
+        Self
+    }
+}
+
 impl TryFrom<IEBuf> for SmallIE {
     type Error = IEDeserializationError;
     fn try_from(value: IEBuf) -> Result<Self, Self::Error> {
-        let mut new = Self::default_for_typecode(value.0[0]).ok_or(IEDeserializationError)?;
+        let ie_type = IeType::new(value.0[0])?;
+        let mut new = Self::default_for_type(ie_type);
         let bytes = &value.0[1..];
         let target = new.as_mut_bytes();
         target.copy_from_slice(&bytes[..target.len()]);

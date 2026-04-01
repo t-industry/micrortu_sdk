@@ -116,7 +116,7 @@ impl SmallIE {
             Self::TI136(ie) => ValueBridge::U64(ie.value as u64),
             Self::TI137(ie) => ValueBridge::I64(ie.value as i64),
             Self::TI138(ie) => ValueBridge::U64(ie.value),
-            Self::TI139(ie) => ValueBridge::I64(ie.value as i64),
+            Self::TI139(ie) => ValueBridge::I64(ie.value),
             Self::TI200(ie) => ValueBridge::U64(ie.value as u64),
             Self::TI201(ie) => ValueBridge::I64(ie.value as i64),
             Self::TI202(ie) => ValueBridge::U64(ie.value),
