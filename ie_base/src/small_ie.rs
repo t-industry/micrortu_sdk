@@ -102,6 +102,19 @@ impl TryFrom<u8> for IeType {
     }
 }
 
+impl core::fmt::Display for IeType {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", *self as u8)
+    }
+}
+impl core::str::FromStr for IeType {
+    type Err = InvalidIeType;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let value = s.parse::<u8>().map_err(|_| InvalidIeType)?;
+        ie_type(value)
+    }
+}
+
 macro_rules! converts {
     ($($ie:ident <=> $small:ident,)*) => {
         $(
