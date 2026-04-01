@@ -37,6 +37,7 @@ impl Parse for Port {
             "TI11" => IEType::TI11,
             "TI13" => IEType::TI13,
             "TI45" => IEType::TI45,
+            "TI46" => IEType::TI46,
             "TI49" => IEType::TI49,
             "TI50" => IEType::TI50,
             "TI112" => IEType::TI112,
@@ -51,11 +52,30 @@ impl Parse for Port {
             _ => {
                 errors.push(syn::Error::new(
                     typ.span(),
-                    "Unknown type. Supported types are TI1, TI3, TI11, TI13, TI45, TI49, TI50, TI112, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203",
+                    "Unknown type. Supported types are TI1, TI3, TI11, TI13, TI45, TI46, TI49, TI50, TI112, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203",
                     ));
                 IEType::TI1
             }
         };
+        match typ {
+            IEType::TI1 => {}
+            IEType::TI3 => {}
+            IEType::TI11 => {}
+            IEType::TI13 => {}
+            IEType::TI45 => {}
+            IEType::TI46 => {}
+            IEType::TI49 => {}
+            IEType::TI50 => {}
+            IEType::TI112 => {}
+            IEType::TI136 => {}
+            IEType::TI137 => {}
+            IEType::TI138 => {}
+            IEType::TI139 => {}
+            IEType::TI200 => {}
+            IEType::TI201 => {}
+            IEType::TI202 => {}
+            IEType::TI203 => {}
+        }
         let mode: Ident = input.parse()?;
 
         let left: LitInt = input.parse()?;
