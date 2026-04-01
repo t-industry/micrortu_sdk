@@ -23,7 +23,7 @@ rkyv = { version = "0.8.10", default-features = false, features = ["bytecheck", 
 bytecheck = { version = "0.8.1", optional = true }
 
 [dev-dependencies]
-strum = { version = "0.25.0", features = ["derive", "strum_macros"] }
+strum = { version = "0.28.0", features = ["derive", "strum_macros"] }
 
 [lints]
 workspace = true
