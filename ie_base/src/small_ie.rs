@@ -1,47 +1,50 @@
 use const_default::ConstDefault;
 
 use crate::{
-    generic_ie::IEMeta, QualityDescriptor, C_SC_NA_1, C_SE_NB_1, C_SE_NC_1, M_DP_NA_1, M_ME_NB_1,
-    M_ME_NE_1, M_SP_NA_1, P_ME_NC_1, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203,
+    generic_ie::IEMeta, QualityDescriptor, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203,
 };
 
-pub type TI1 = M_SP_NA_1;
-pub type TI3 = M_DP_NA_1;
-pub type TI11 = M_ME_NB_1;
-pub type TI13 = M_ME_NE_1;
-pub type TI45 = C_SC_NA_1;
-pub type TI49 = C_SE_NB_1;
-pub type TI50 = C_SE_NC_1;
-pub type TI112 = P_ME_NC_1;
+pub type TI1 = crate::M_SP_NA_1;
+pub type TI3 = crate::M_DP_NA_1;
+pub type TI11 = crate::M_ME_NB_1;
+pub type TI13 = crate::M_ME_NE_1;
+pub type TI45 = crate::C_SC_NA_1;
+pub type TI46 = crate::C_DC_NA_1;
+pub type TI49 = crate::C_SE_NB_1;
+pub type TI50 = crate::C_SE_NC_1;
+pub type TI112 = crate::P_ME_NC_1;
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(test, derive(strum::EnumIter))]
 pub enum SmallIE {
-    TI1(M_SP_NA_1),
-    TI3(M_DP_NA_1),
-    TI11(M_ME_NB_1),
-    TI13(M_ME_NE_1),
-    TI45(C_SC_NA_1),
-    TI49(C_SE_NB_1),
-    TI50(C_SE_NC_1),
-    TI112(P_ME_NC_1),
-    TI136(TI136),
-    TI137(TI137),
-    TI138(TI138),
-    TI139(TI139),
-    TI200(TI200),
-    TI201(TI201),
-    TI202(TI202),
-    TI203(TI203),
+    TI1(TI1) = 1,
+    TI3(TI3) = 3,
+    TI11(TI11) = 11,
+    TI13(TI13) = 13,
+    TI45(TI45) = 45,
+    TI46(TI46) = 46,
+    TI49(TI49) = 49,
+    TI50(TI50) = 50,
+    TI112(TI112) = 112,
+    TI136(TI136) = 136,
+    TI137(TI137) = 137,
+    TI138(TI138) = 138,
+    TI139(TI139) = 139,
+    TI200(TI200) = 200,
+    TI201(TI201) = 201,
+    TI202(TI202) = 202,
+    TI203(TI203) = 203,
 }
 
-enum IEType {
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
+pub enum IeType {
     TI1 = 1,
     TI3 = 3,
     TI11 = 11,
     TI13 = 13,
     TI45 = 45,
+    TI46 = 46,
     TI49 = 49,
     TI50 = 50,
     TI112 = 112,
@@ -58,30 +61,41 @@ enum IEType {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BufferTooSmall;
 
-const fn ie_type(typecode: u8) -> Result<IEType, ()> {
-    match typecode {
-        1 => Ok(IEType::TI1),
-        3 => Ok(IEType::TI3),
-        11 => Ok(IEType::TI11),
-        13 => Ok(IEType::TI13),
-        45 => Ok(IEType::TI45),
-        49 => Ok(IEType::TI49),
-        50 => Ok(IEType::TI50),
-        112 => Ok(IEType::TI112),
-        136 => Ok(IEType::TI136),
-        137 => Ok(IEType::TI137),
-        138 => Ok(IEType::TI138),
-        139 => Ok(IEType::TI139),
-        200 => Ok(IEType::TI200),
-        201 => Ok(IEType::TI201),
-        202 => Ok(IEType::TI202),
-        203 => Ok(IEType::TI203),
-        _ => Err(()),
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct InvalidIeType;
+
+const fn ie_type(typecode: u8) -> Result<IeType, InvalidIeType> {
+    IeType::new(typecode)
+}
+
+impl IeType {
+    #[inline(always)]
+    pub const fn new(typecode: u8) -> Result<IeType, InvalidIeType> {
+        match typecode {
+            1 => Ok(IeType::TI1),
+            3 => Ok(IeType::TI3),
+            11 => Ok(IeType::TI11),
+            13 => Ok(IeType::TI13),
+            45 => Ok(IeType::TI45),
+            46 => Ok(IeType::TI46),
+            49 => Ok(IeType::TI49),
+            50 => Ok(IeType::TI50),
+            112 => Ok(IeType::TI112),
+            136 => Ok(IeType::TI136),
+            137 => Ok(IeType::TI137),
+            138 => Ok(IeType::TI138),
+            139 => Ok(IeType::TI139),
+            200 => Ok(IeType::TI200),
+            201 => Ok(IeType::TI201),
+            202 => Ok(IeType::TI202),
+            203 => Ok(IeType::TI203),
+            _ => Err(InvalidIeType),
+        }
     }
 }
 
-impl TryFrom<u8> for IEType {
-    type Error = ();
+impl TryFrom<u8> for IeType {
+    type Error = InvalidIeType;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         ie_type(value)
@@ -111,14 +125,15 @@ macro_rules! converts {
 }
 
 converts!(
-    M_SP_NA_1 <=> TI1,
-    M_DP_NA_1 <=> TI3,
-    M_ME_NB_1 <=> TI11,
-    M_ME_NE_1 <=> TI13,
-    C_SC_NA_1 <=> TI45,
-    C_SE_NB_1 <=> TI49,
-    C_SE_NC_1 <=> TI50,
-    P_ME_NC_1 <=> TI112,
+    TI1 <=> TI1,
+    TI3 <=> TI3,
+    TI11 <=> TI11,
+    TI13 <=> TI13,
+    TI45 <=> TI45,
+    TI46 <=> TI46,
+    TI49 <=> TI49,
+    TI50 <=> TI50,
+    TI112 <=> TI112,
     TI136 <=> TI136,
     TI137 <=> TI137,
     TI138 <=> TI138,
@@ -143,6 +158,7 @@ macro_rules! map_small_ie {
             Self::TI11(v) => $f(v),
             Self::TI13(v) => $f(v),
             Self::TI45(v) => $f(v),
+            Self::TI46(v) => $f(v),
             Self::TI49(v) => $f(v),
             Self::TI50(v) => $f(v),
             Self::TI112(v) => $f(v),
@@ -189,25 +205,42 @@ impl SmallIE {
     }
 
     #[must_use]
+    pub const fn ie_type(&self) -> IeType {
+        match map_small_ie!(self, T, const || -> (Result<IeType, InvalidIeType>) IeType::new(T::TYPECODE))
+        {
+            Ok(v) => v,
+            Err(_) => unreachable!(),
+        }
+    }
+
+    #[must_use]
+    pub const fn default_for_type(ie_type: IeType) -> Self {
+        match ie_type {
+            IeType::TI1 => Self::TI1(ConstDefault::DEFAULT),
+            IeType::TI3 => Self::TI3(ConstDefault::DEFAULT),
+            IeType::TI11 => Self::TI11(ConstDefault::DEFAULT),
+            IeType::TI13 => Self::TI13(ConstDefault::DEFAULT),
+            IeType::TI45 => Self::TI45(ConstDefault::DEFAULT),
+            IeType::TI46 => Self::TI46(ConstDefault::DEFAULT),
+            IeType::TI49 => Self::TI49(ConstDefault::DEFAULT),
+            IeType::TI50 => Self::TI50(ConstDefault::DEFAULT),
+            IeType::TI112 => Self::TI112(ConstDefault::DEFAULT),
+            IeType::TI136 => Self::TI136(ConstDefault::DEFAULT),
+            IeType::TI137 => Self::TI137(ConstDefault::DEFAULT),
+            IeType::TI138 => Self::TI138(ConstDefault::DEFAULT),
+            IeType::TI139 => Self::TI139(ConstDefault::DEFAULT),
+            IeType::TI200 => Self::TI200(ConstDefault::DEFAULT),
+            IeType::TI201 => Self::TI201(ConstDefault::DEFAULT),
+            IeType::TI202 => Self::TI202(ConstDefault::DEFAULT),
+            IeType::TI203 => Self::TI203(ConstDefault::DEFAULT),
+        }
+    }
+
+    #[must_use]
     pub const fn default_for_typecode(typecode: u8) -> Option<Self> {
         match ie_type(typecode) {
-            Ok(IEType::TI1) => Some(Self::TI1(ConstDefault::DEFAULT)),
-            Ok(IEType::TI3) => Some(Self::TI3(ConstDefault::DEFAULT)),
-            Ok(IEType::TI11) => Some(Self::TI11(ConstDefault::DEFAULT)),
-            Ok(IEType::TI13) => Some(Self::TI13(ConstDefault::DEFAULT)),
-            Ok(IEType::TI45) => Some(Self::TI45(ConstDefault::DEFAULT)),
-            Ok(IEType::TI49) => Some(Self::TI49(ConstDefault::DEFAULT)),
-            Ok(IEType::TI50) => Some(Self::TI50(ConstDefault::DEFAULT)),
-            Ok(IEType::TI112) => Some(Self::TI112(ConstDefault::DEFAULT)),
-            Ok(IEType::TI136) => Some(Self::TI136(ConstDefault::DEFAULT)),
-            Ok(IEType::TI137) => Some(Self::TI137(ConstDefault::DEFAULT)),
-            Ok(IEType::TI138) => Some(Self::TI138(ConstDefault::DEFAULT)),
-            Ok(IEType::TI139) => Some(Self::TI139(ConstDefault::DEFAULT)),
-            Ok(IEType::TI200) => Some(Self::TI200(ConstDefault::DEFAULT)),
-            Ok(IEType::TI201) => Some(Self::TI201(ConstDefault::DEFAULT)),
-            Ok(IEType::TI202) => Some(Self::TI202(ConstDefault::DEFAULT)),
-            Ok(IEType::TI203) => Some(Self::TI203(ConstDefault::DEFAULT)),
-            Err(()) => None,
+            Ok(t) => Some(Self::default_for_type(t)),
+            Err(_) => None,
         }
     }
 
@@ -230,6 +263,7 @@ impl SmallIE {
     /// Returns bytes to underlying value
     /// Not includes typecode
     #[must_use]
+    #[inline(always)]
     pub fn as_mut_bytes(&mut self) -> &mut [u8] {
         map_small_ie!(self, T, |&mut it| -> (&mut [u8]) it.as_mut_bytes())
     }
@@ -237,8 +271,18 @@ impl SmallIE {
     /// Returns bytes to underlying value
     /// Not includes typecode
     #[must_use]
+    #[inline(always)]
     pub fn as_bytes(&self) -> &[u8] {
         map_small_ie!(self, T, |&it| -> (&[u8]) it.as_bytes())
+    }
+
+    #[must_use]
+    #[inline(always)]
+    pub fn try_from_typecode_and_bytes(typecode: u8, bytes: &[u8]) -> Option<Self> {
+        let bytes = bytes.get(..Self::size_for_typecode(typecode))?;
+        let mut value = Self::default_for_typecode(typecode)?;
+        value.as_mut_bytes().copy_from_slice(bytes);
+        Some(value)
     }
 
     /// Copies bytes to underlying value
@@ -269,6 +313,7 @@ impl SmallIE {
             | Self::TI202(_)
             | Self::TI203(_)
             | Self::TI45(_)
+            | Self::TI46(_)
             | Self::TI49(_)
             | Self::TI50(_)
             | Self::TI112(_) => None,
@@ -291,6 +336,7 @@ impl SmallIE {
             | Self::TI202(_)
             | Self::TI203(_)
             | Self::TI45(_)
+            | Self::TI46(_)
             | Self::TI49(_)
             | Self::TI50(_)
             | Self::TI112(_) => None,
@@ -298,11 +344,21 @@ impl SmallIE {
     }
 
     #[must_use]
-    pub fn try_change_typecode(self, new_typecode: u8) -> Option<Self> {
-        match (self, new_typecode) {
-            (Self::TI1(ie), 1) => Some(Self::TI1(ie)),
-            _ => todo!(),
+    #[inline(always)]
+    pub fn extract_ti<T: IEMeta>(&self) -> Option<T> {
+        if T::TYPECODE == self.typecode() {
+            let value = T::ref_from_bytes(self.as_bytes());
+            Some(*value.expect("Typecodes match"))
+        } else {
+            None
         }
+    }
+}
+
+impl core::error::Error for InvalidIeType {}
+impl core::fmt::Display for InvalidIeType {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Invalid IE type")
     }
 }
 
@@ -318,40 +374,9 @@ mod test {
     #[test]
     fn test_default() {
         for ie in SmallIE::iter() {
-            let mut ie_buf: IEBuf = ie.into();
-            let ref_ie: &SmallIE = (&ie_buf).try_into().unwrap();
-            assert_eq!(ie, *ref_ie);
-            let mut_ref_ie: &mut SmallIE = (&mut ie_buf).try_into().unwrap();
-            assert_eq!(ie, *mut_ref_ie);
+            let ie_buf: IEBuf = ie.into();
             let owned_ie: SmallIE = ie_buf.try_into().unwrap();
             assert_eq!(ie, owned_ie);
-        }
-    }
-
-    fn test_bad_iebuf_by_typecode(code: u8) {
-        let mut ie_buf = IEBuf([1; core::mem::size_of::<IEBuf>()]);
-        ie_buf.0[0] = code;
-        let ref_ie: Result<&SmallIE, _> = (&ie_buf).try_into();
-        if let Ok(ref_ie) = ref_ie {
-            core::hint::black_box(*ref_ie); // miri
-        }
-        assert!(ref_ie.is_err());
-        let mut_ref_ie: Result<&mut SmallIE, _> = (&mut ie_buf).try_into();
-        if let Ok(mut_ref_ie) = ref_ie {
-            core::hint::black_box(*mut_ref_ie); // miri
-        }
-        assert!(mut_ref_ie.is_err());
-        let owned_ie: Result<SmallIE, _> = ie_buf.try_into();
-        assert!(owned_ie.is_err());
-    }
-
-    #[test]
-    fn test_bad_iebuf() {
-        let typecodes: Vec<_> = SmallIE::iter().map(|ie| ie.typecode()).collect();
-        for code in 0..=255 {
-            if typecodes.iter().all(|&tc| tc != code) {
-                test_bad_iebuf_by_typecode(code);
-            }
         }
     }
 
@@ -388,10 +413,6 @@ mod test {
         assert_eq!(
             Some(SmallIE::TI3(Default::default())),
             ie_buf.try_into().ok()
-        );
-        assert_eq!(
-            Some(&SmallIE::TI3(Default::default())),
-            (&ie_buf).try_into().ok()
         );
     }
 }

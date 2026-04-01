@@ -37,32 +37,6 @@ impl TryFrom<IEBuf> for SmallIE {
     }
 }
 
-impl TryFrom<&IEBuf> for &SmallIE {
-    type Error = IEDeserializationError;
-
-    #[allow(clippy::ptr_as_ptr)]
-    fn try_from(value: &IEBuf) -> Result<Self, Self::Error> {
-        SmallIE::default_for_typecode(value.0[0]).ok_or(IEDeserializationError)?;
-
-        let ptr = core::ptr::from_ref(value) as *const _;
-
-        Ok(unsafe { &*ptr })
-    }
-}
-
-impl TryFrom<&mut IEBuf> for &mut SmallIE {
-    type Error = IEDeserializationError;
-
-    #[allow(clippy::ptr_as_ptr)]
-    fn try_from(value: &mut IEBuf) -> Result<Self, Self::Error> {
-        SmallIE::default_for_typecode(value.0[0]).ok_or(IEDeserializationError)?;
-
-        let ptr = core::ptr::from_mut(value) as *mut _;
-
-        Ok(unsafe { &mut *ptr })
-    }
-}
-
 impl From<SmallIE> for IEBuf {
     #[inline]
     fn from(value: SmallIE) -> Self {

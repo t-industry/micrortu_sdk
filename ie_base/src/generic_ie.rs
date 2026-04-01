@@ -3,7 +3,7 @@ use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 use crate::{
     SmallIE, C_SC_NA_1, C_SE_NB_1, C_SE_NC_1, M_DP_NA_1, M_ME_NB_1, M_ME_NE_1, M_SP_NA_1,
-    P_ME_NC_1, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203,
+    P_ME_NC_1, TI136, TI137, TI138, TI139, TI200, TI201, TI202, TI203, TI46,
 };
 
 pub struct IE<const TYPECODE: u8>;
@@ -17,7 +17,6 @@ pub trait IEMeta:
     + PartialEq
     + Copy
     + TryFrom<SmallIE>
-    + TryFrom<f32>
     + core::fmt::Debug
     + Default
     + ConstDefault
@@ -50,6 +49,7 @@ impl_qie! {
     M_ME_NB_1 => 11,
     M_ME_NE_1 => 13,
     C_SC_NA_1 => 45,
+    TI46 => 46,
     C_SE_NB_1 => 49,
     C_SE_NC_1 => 50,
     P_ME_NC_1 => 112,

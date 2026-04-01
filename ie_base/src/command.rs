@@ -31,15 +31,6 @@ pub struct C_DC_NA_1 {
     pub dco: DCO,
 }
 
-/// TI48, `C_SE_NA_1`, Set-point command, normalized value
-#[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
-#[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
-#[cfg_attr(feature = "rkyv", derive(CheckBytes))]
-pub struct C_SE_NA_1 {
-    pub dco: DCO,
-}
-
 /// TI49, `C_SE_NB_1`, Set-point command, normalized value
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
@@ -146,7 +137,6 @@ mod impls {
 
     unsafe_resolve_as!(C_SC_NA_1, r1, struct, SCO, value);
     unsafe_resolve_as!(C_DC_NA_1, r2, struct, DCO, dco);
-    unsafe_resolve_as!(C_SE_NA_1, r3, struct, DCO, dco);
     unsafe_resolve_as!(C_SE_NB_1, r4, struct, i16_le, value, QOS, qos);
     unsafe_resolve_as!(C_SE_NC_1, r5, struct, f32_le, value, QOS, qos);
     unsafe_resolve_as!(TI200, r6, struct, u32_le, value, QOS, qos);

@@ -32,9 +32,13 @@ pub trait QualifierOfCommandHolder {
 
 pub trait QualifierOfCommand {
     fn se(&self) -> bool;
-    fn set_se(&mut self, value: bool) -> &mut Self;
+    fn set_se(&mut self, value: bool);
     fn qu(&self) -> QU;
-    fn set_qu(&mut self, value: QU) -> &mut Self;
+    fn set_qu(&mut self, value: QU);
+    fn update_from(&mut self, src: &dyn QualifierOfCommand) {
+        self.set_se(src.se());
+        self.set_qu(src.qu());
+    }
 }
 
 impl BitRange<u8> for RawQualifierOfCommand {
@@ -77,9 +81,8 @@ impl<T: QualifierOfCommandHolder> QualifierOfCommand for T {
         self.qoc_raw().bit(7)
     }
 
-    fn set_se(&mut self, value: bool) -> &mut Self {
+    fn set_se(&mut self, value: bool) {
         self.mut_qoc_raw().set_bit(7, value);
-        self
     }
 
     fn qu(&self) -> QU {
@@ -92,7 +95,7 @@ impl<T: QualifierOfCommandHolder> QualifierOfCommand for T {
         }
     }
 
-    fn set_qu(&mut self, value: QU) -> &mut Self {
+    fn set_qu(&mut self, value: QU) {
         self.mut_qoc_raw().set_bit_range(
             6,
             2,
@@ -104,6 +107,5 @@ impl<T: QualifierOfCommandHolder> QualifierOfCommand for T {
                 QU::Reserved(v) => v,
             },
         );
-        self
     }
 }
