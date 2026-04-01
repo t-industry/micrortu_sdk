@@ -30,6 +30,16 @@ pub trait QualifierOfCommandHolder {
     fn mut_qoc_raw(&mut self) -> &mut RawQualifierOfCommand;
 }
 
+impl QualifierOfCommandHolder for RawQualifierOfCommand {
+    fn qoc_raw(&self) -> RawQualifierOfCommand {
+        *self
+    }
+
+    fn mut_qoc_raw(&mut self) -> &mut RawQualifierOfCommand {
+        self
+    }
+}
+
 pub trait QualifierOfCommand {
     fn se(&self) -> bool;
     fn set_se(&mut self, value: bool);
@@ -64,6 +74,16 @@ impl Eq for RawQualifierOfCommand {}
 
 #[macro_export]
 macro_rules! impl_qoc_for {
+    ($T:ty,$field:tt) => {
+        impl $crate::qoc::QualifierOfCommandHolder for $T {
+            fn qoc_raw(&self) -> $crate::qoc::RawQualifierOfCommand {
+                self.$field
+            }
+            fn mut_qoc_raw(&mut self) -> &mut $crate::qoc::RawQualifierOfCommand {
+                &mut self.$field
+            }
+        }
+    };
     ($T:ty) => {
         impl $crate::qoc::QualifierOfCommandHolder for $T {
             fn qoc_raw(&self) -> $crate::qoc::RawQualifierOfCommand {

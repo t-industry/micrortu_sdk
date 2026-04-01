@@ -54,7 +54,8 @@ impl SmallIE {
 
         let bridge_val = other.extract_bridge_value();
         let qds = other.extract_qds();
-        let qos_raw = other.extract_qos_byte();
+        let qoc = other.extract_qoc();
+        let qos = other.extract_qos();
 
         self.apply_bridge_value(bridge_val);
 
@@ -62,8 +63,12 @@ impl SmallIE {
             self.apply_qds(&q);
         }
 
-        if let Some(byte) = qos_raw {
-            self.apply_qos_byte(byte);
+        if let Some(qoc) = qoc {
+            self.apply_qoc(&qoc);
+        }
+
+        if let Some(qos) = qos {
+            self.apply_qos(&qos);
         }
     }
 }
@@ -163,7 +168,9 @@ impl SmallIE {
             (Self::TI46(ie), ValueBridge::I64(_)) => _ = ie.dco.set_dcs(DCS::Off),
             (Self::TI49(ie), ValueBridge::U64(v)) => ie.value = uclamp(v, i16::MIN, i16::MAX),
             (Self::TI49(ie), ValueBridge::I64(v)) => ie.value = iclamp(v, i16::MIN, i16::MAX),
-            (Self::TI49(ie), ValueBridge::F32(v)) => ie.value = uclamp(v as u64, i16::MIN, i16::MAX),
+            (Self::TI49(ie), ValueBridge::F32(v)) => {
+                ie.value = uclamp(v as u64, i16::MIN, i16::MAX)
+            }
             (Self::TI50(ie), ValueBridge::F32(v)) => ie.value = v,
             (Self::TI50(ie), ValueBridge::U64(v)) => ie.value = v as f32,
             (Self::TI50(ie), ValueBridge::I64(v)) => ie.value = v as f32,
@@ -199,7 +206,15 @@ impl SmallIE {
         }
     }
 
-    fn extract_qos_byte(&self) -> Option<u8> {
+    fn extract_qoc(&self) -> Option<crate::RawQualifierOfCommand> {
+        match self {
+            Self::TI45(ie) => Some(ie.value.qoc_raw()),
+            Self::TI46(ie) => Some(ie.dco.qoc_raw()),
+            _ => None,
+        }
+    }
+
+    fn extract_qos(&self) -> Option<crate::RawQualifierOfSetpoint> {
         match self {
             Self::TI49(ie) => Some(ie.qos.0),
             Self::TI50(ie) => Some(ie.qos.0),
@@ -255,14 +270,36 @@ impl SmallIE {
         }
     }
 
-    fn apply_qos_byte(&mut self, raw: u8) {
+    fn apply_qoc(&mut self, raw: &dyn QualifierOfCommand) {
         match self {
-            Self::TI49(ie) => ie.qos.0 = raw,
-            Self::TI50(ie) => ie.qos.0 = raw,
-            Self::TI200(ie) => ie.qos.0 = raw,
-            Self::TI201(ie) => ie.qos.0 = raw,
-            Self::TI202(ie) => ie.qos.0 = raw,
-            Self::TI203(ie) => ie.qos.0 = raw,
+            Self::TI45(ie) => ie.value.update_from(raw),
+            Self::TI46(ie) => ie.dco.update_from(raw),
+            Self::TI1(_)
+            | Self::TI3(_)
+            | Self::TI11(_)
+            | Self::TI13(_)
+            | Self::TI49(_)
+            | Self::TI50(_)
+            | Self::TI112(_)
+            | Self::TI136(_)
+            | Self::TI137(_)
+            | Self::TI138(_)
+            | Self::TI139(_)
+            | Self::TI200(_)
+            | Self::TI201(_)
+            | Self::TI202(_)
+            | Self::TI203(_) => (),
+        }
+    }
+
+    fn apply_qos(&mut self, raw: &dyn QualifierOfSetpoint) {
+        match self {
+            Self::TI49(ie) => ie.qos.update_from(raw),
+            Self::TI50(ie) => ie.qos.update_from(raw),
+            Self::TI200(ie) => ie.qos.update_from(raw),
+            Self::TI201(ie) => ie.qos.update_from(raw),
+            Self::TI202(ie) => ie.qos.update_from(raw),
+            Self::TI203(ie) => ie.qos.update_from(raw),
             Self::TI1(_)
             | Self::TI3(_)
             | Self::TI11(_)

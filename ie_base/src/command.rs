@@ -1,6 +1,6 @@
 #![allow(non_camel_case_types)]
 
-use bitfield::{bitfield_bitrange, bitfield_fields, BitRange, BitRangeMut};
+use bitfield::{bitfield_fields, BitRange, BitRangeMut};
 use const_default::ConstDefault;
 use int_enum::IntEnum;
 use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
@@ -11,7 +11,7 @@ use {
     rkyv::{Archive, Portable, Serialize},
 };
 
-use crate::{impl_qoc_for, qoc::RawQualifierOfCommand};
+use crate::{impl_qoc_for, impl_qos_for, qoc::RawQualifierOfCommand, qos::RawQualifierOfSetpoint};
 
 /// TI45, `C_SC_NA_1`, Single command
 #[repr(C, packed)]
@@ -99,7 +99,9 @@ pub struct InvalidState;
 #[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
 #[cfg_attr(feature = "rkyv", rkyv(as = Self))]
-pub struct SCO(pub u8);
+pub struct SCO(pub RawQualifierOfCommand);
+
+impl_qoc_for!(SCO, 0);
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq, IntEnum)]
@@ -119,15 +121,16 @@ pub struct DCO {
     pub raw: RawQualifierOfCommand,
 }
 
+impl_qoc_for!(DCO);
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Default, ConstDefault, PartialEq)] //
 #[derive(IntoBytes, FromBytes, Immutable, KnownLayout)] //
 #[cfg_attr(feature = "rkyv", derive(Archive, Serialize, Portable, CheckBytes))] //
 #[cfg_attr(feature = "rkyv", rkyv(as = Self))]
-pub struct QOS(pub u8);
+pub struct QOS(pub RawQualifierOfSetpoint);
 
-bitfield_bitrange! { struct SCO(u8) }
-bitfield_bitrange! { struct QOS(u8) }
+impl_qos_for!(QOS, 0);
 
 #[cfg(feature = "rkyv")]
 mod impls {
@@ -145,8 +148,6 @@ mod impls {
     unsafe_resolve_as!(TI203, r9, struct, i64_le, value, QOS, qos);
 }
 
-impl_qoc_for!(DCO);
-
 impl TryFrom<C_DC_NA_1> for bool {
     type Error = InvalidState;
 
@@ -162,6 +163,18 @@ impl TryFrom<C_DC_NA_1> for bool {
 impl From<C_SC_NA_1> for bool {
     fn from(command: C_SC_NA_1) -> Self {
         command.value.scs()
+    }
+}
+
+impl BitRange<u8> for SCO {
+    fn bit_range(&self, msb: usize, lsb: usize) -> u8 {
+        self.0.bit_range(msb, lsb)
+    }
+}
+
+impl BitRangeMut<u8> for SCO {
+    fn set_bit_range(&mut self, msb: usize, lsb: usize, value: u8) {
+        self.0.set_bit_range(msb, lsb, value);
     }
 }
 
@@ -182,6 +195,18 @@ impl DCO {
     pub fn set_dcs(&mut self, value: DCS) -> &mut Self {
         self.raw.set_bit_range(1, 0, u8::from(value));
         self
+    }
+}
+
+impl BitRange<u8> for QOS {
+    fn bit_range(&self, msb: usize, lsb: usize) -> u8 {
+        self.0.bit_range(msb, lsb)
+    }
+}
+
+impl BitRangeMut<u8> for QOS {
+    fn set_bit_range(&mut self, msb: usize, lsb: usize, value: u8) {
+        self.0.set_bit_range(msb, lsb, value)
     }
 }
 

@@ -10,6 +10,7 @@ pub mod measurement;
 pub mod parameter;
 pub mod qds;
 pub mod qoc;
+pub mod qos;
 pub mod system;
 
 pub mod conversion_impls;
@@ -23,6 +24,8 @@ pub use command::*;
 pub use measurement::*;
 pub use parameter::*;
 pub use qds::*;
+pub use qoc::*;
+pub use qos::*;
 pub use system::*;
 
 #[cfg(feature = "rkyv")]
