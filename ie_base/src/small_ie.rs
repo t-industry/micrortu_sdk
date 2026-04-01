@@ -37,7 +37,7 @@ pub enum SmallIE {
     TI203(TI203) = 203,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum IeType {
     TI1 = 1,
     TI3 = 3,
@@ -63,10 +63,6 @@ pub struct BufferTooSmall;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct InvalidIeType;
-
-const fn ie_type(typecode: u8) -> Result<IeType, InvalidIeType> {
-    IeType::new(typecode)
-}
 
 impl IeType {
     #[inline(always)]
@@ -98,7 +94,7 @@ impl TryFrom<u8> for IeType {
     type Error = InvalidIeType;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
-        ie_type(value)
+        IeType::new(value)
     }
 }
 
@@ -111,7 +107,7 @@ impl core::str::FromStr for IeType {
     type Err = InvalidIeType;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let value = s.parse::<u8>().map_err(|_| InvalidIeType)?;
-        ie_type(value)
+        IeType::new(value)
     }
 }
 
@@ -250,27 +246,15 @@ impl SmallIE {
     }
 
     #[must_use]
-    pub const fn default_for_typecode(typecode: u8) -> Option<Self> {
-        match ie_type(typecode) {
-            Ok(t) => Some(Self::default_for_type(t)),
-            Err(_) => None,
-        }
+    pub const fn size_for_type(typecode: IeType) -> usize {
+        let v = Self::default_for_type(typecode);
+        map_small_ie!(&v, T, const || -> (usize) core::mem::size_of::<T>())
     }
 
     #[must_use]
-    pub const fn size_for_typecode(typecode: u8) -> usize {
-        match Self::default_for_typecode(typecode) {
-            Some(v) => map_small_ie!(&v, T, const || -> (usize) core::mem::size_of::<T>()),
-            None => 0,
-        }
-    }
-
-    #[must_use]
-    pub const fn align_for_typecode(typecode: u8) -> usize {
-        match Self::default_for_typecode(typecode) {
-            Some(v) => map_small_ie!(&v, T, const || -> (usize) core::mem::align_of::<T>()),
-            None => 0,
-        }
+    pub const fn align_for_type(typecode: IeType) -> usize {
+        let v = Self::default_for_type(typecode);
+        map_small_ie!(&v, T, const || -> (usize) core::mem::align_of::<T>())
     }
 
     /// Returns bytes to underlying value
@@ -291,9 +275,9 @@ impl SmallIE {
 
     #[must_use]
     #[inline(always)]
-    pub fn try_from_typecode_and_bytes(typecode: u8, bytes: &[u8]) -> Option<Self> {
-        let bytes = bytes.get(..Self::size_for_typecode(typecode))?;
-        let mut value = Self::default_for_typecode(typecode)?;
+    pub fn try_from_type_and_bytes(ie_type: IeType, bytes: &[u8]) -> Option<Self> {
+        let bytes = bytes.get(..Self::size_for_type(ie_type))?;
+        let mut value = Self::default_for_type(ie_type);
         value.as_mut_bytes().copy_from_slice(bytes);
         Some(value)
     }
@@ -382,7 +366,7 @@ mod test {
 
     use strum::IntoEnumIterator;
 
-    use crate::{IEBuf, SmallIE};
+    use crate::{IEBuf, IeType, SmallIE};
 
     #[test]
     fn test_default() {
@@ -404,17 +388,11 @@ mod test {
 
     #[test]
     fn test_defaults() {
-        let defaults: HashMap<u8, SmallIE> =
-            SmallIE::iter().map(|ie| (ie.typecode(), ie)).collect();
+        let defaults: HashMap<IeType, SmallIE> =
+            SmallIE::iter().map(|ie| (ie.ie_type(), ie)).collect();
 
         for (&code, &ie) in &defaults {
-            assert_eq!(Some(ie), SmallIE::default_for_typecode(code));
-        }
-
-        for code in 0..=255 {
-            if !defaults.contains_key(&code) {
-                assert_eq!(None, SmallIE::default_for_typecode(code));
-            }
+            assert_eq!(ie, SmallIE::default_for_type(code));
         }
     }
 
