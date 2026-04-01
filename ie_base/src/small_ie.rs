@@ -125,11 +125,11 @@ macro_rules! converts {
             }
 
             impl TryFrom<SmallIE> for $ie {
-                type Error = ();
-                fn try_from(value: SmallIE) -> Result<Self, ()> {
+                type Error = InvalidIeType;
+                fn try_from(value: SmallIE) -> Result<Self, InvalidIeType> {
                     match value {
                         SmallIE::$small(it) => Ok(it),
-                        _ => Err(()),
+                        _ => Err(InvalidIeType),
                     }
                 }
             }
