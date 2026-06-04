@@ -1,2 +1,26 @@
 [template]
-include = ["Cargo.toml", "src", "src/**", "conf.json", ".cargo"]
+include = ["Cargo.toml", "src", "src/**", "project-no-wasm.json5", "project-wasm.json5", ".cargo"]
+
+[hooks]
+post = ["post-script.rhai"]
+
+[placeholders.wasm]
+prompt = "Do you want to custom WASM block, written in Rust?"
+type = "bool"
+
+[conditional.'wasm == true']
+ignore = ["project-no-wasm.json5"]
+
+[conditional.'wasm == false']
+ignore = ["Cargo.toml", "src", ".cargo", "project-wasm.json5"]
+
+[placeholders.firmware_version]
+prompt = "Enter target firmware_version"
+type = "string"
+regex = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+default = "0.17.0" # keep as the latest fw version
+choices = [
+  "0.17.0",
+  "0.16.2",
+  "0.16.1",
+]

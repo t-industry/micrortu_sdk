@@ -1,4 +1,5 @@
 {
+    "firmware_version": "{{firmware_version}}",
     "version": [0, 0, 1],
     "base_control_period_milliseconds": 100,
     "address_space": [
