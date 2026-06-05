@@ -55,6 +55,7 @@ members = [
   "./micrortu_build_utils",
   "./ie_representation_derive",
 ]
+exclude = ["./template"]
 resolver = "2"
 
 [dependencies]
