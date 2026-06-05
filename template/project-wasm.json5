@@ -17,9 +17,6 @@
                     "port_binding": {
                         "count": [ { "name": "count" } ],
                     },
-                    "configuration": {
-                        "num": 0
-                    }
                 }
             ]
         },
