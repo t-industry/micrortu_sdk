@@ -11,6 +11,9 @@ pub struct BumpAllocator {
     buffer: RefCell<SliceOrEmpty>,
 }
 
+#[derive(Clone, Copy, Default, Eq, PartialEq)]
+pub struct AllocError;
+
 // Safety: BumpAllocator is not Sync, but wasm is single-threaded
 #[cfg(any(target_arch = "wasm32", feature = "micrortu_sdk_internal"))]
 unsafe impl Sync for BumpAllocator {}
@@ -28,19 +31,30 @@ impl BumpAllocator {
         mem::replace(&mut *borrow_mut, buffer)
     }
 
-    pub fn alloc<T>(&self, value: T) -> &'static mut T {
+    #[inline(always)]
+    pub fn alloc<'a, T>(&self, value: T) -> &'a mut T {
+        match self.try_alloc(value) {
+            Ok(buffer) => buffer,
+            Err(e) => {
+                log::error!("{e}");
+                panic!("{e}");
+            }
+        }
+    }
+
+    #[inline(always)]
+    pub fn try_alloc<'a, T>(&self, value: T) -> Result<&'a mut T, AllocError> {
         let size = mem::size_of::<T>();
         let align = mem::align_of::<T>();
 
-        let allocated = self.alloc_inner(size, align);
-        let ptr = ptr::from_mut::<[u8]>(allocated).cast::<T>();
+        let allocated = self.try_alloc_inner(size, align)?;
+        let ptr = ptr::from_mut::<[u8]>(allocated).cast::<mem::MaybeUninit<T>>();
 
-        // Initialize the value, not dropping the previous one
-        unsafe { ptr.write(value) };
-
-        // SAFETY: allocated is properly aligned and has the correct size,
+        // SAFETY: `ptr` is properly aligned and has the correct size,
         //         memory is uniquely referenced
-        unsafe { &mut *ptr }
+        let maybe_uninit = unsafe { &mut *ptr };
+
+        Ok(maybe_uninit.write(value))
     }
 
     fn get_refcell(&self) -> &RefCell<&'static mut [u8]> {
@@ -49,14 +63,13 @@ impl BumpAllocator {
         unsafe { &*ptr::from_ref(&self.buffer).cast() }
     }
 
-    fn alloc_inner(&self, size: usize, align: usize) -> &'static mut [u8] {
+    fn try_alloc_inner(&self, size: usize, align: usize) -> Result<&'static mut [u8], AllocError> {
         let mut borrow_mut = self.get_refcell().borrow_mut();
         let current_address = borrow_mut.as_ptr() as usize;
         let to_cut = ((current_address + align - 1) & !(align - 1)) - current_address;
 
         if to_cut + size > borrow_mut.len() {
-            log::error!("BumpAllocator out of memory");
-            panic!("BumpAllocator out of memory");
+            return Err(AllocError);
         }
 
         let buffer = mem::take(&mut *borrow_mut);
@@ -64,7 +77,7 @@ impl BumpAllocator {
         let (allocated, rest) = buffer.split_at_mut(size);
         *borrow_mut = rest;
 
-        allocated
+        Ok(allocated)
     }
 }
 
@@ -74,10 +87,37 @@ impl Default for BumpAllocator {
     }
 }
 
+impl core::fmt::Debug for AllocError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "BumpAllocator out of memory")
+    }
+}
+impl core::fmt::Display for AllocError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "BumpAllocator out of memory")
+    }
+}
+impl core::error::Error for AllocError {}
+
 #[cfg(test)]
 mod test {
     use super::*;
     use static_cell::StaticCell;
+
+    #[test]
+    fn cycle_buffers() {
+        static BUFFER1: StaticCell<[u8; 100]> = StaticCell::new();
+        static BUFFER2: StaticCell<[u8; 100]> = StaticCell::new();
+        let buffer1 = BUFFER1.init([0; 100]);
+        let buffer2 = BUFFER2.init([0; 100]);
+        let p1 = buffer1.as_ptr() as usize;
+        let p2 = buffer2.as_ptr() as usize;
+        let allocator = BumpAllocator::new();
+        assert!(allocator.replace_buffer(buffer1).is_empty());
+        assert!(allocator.replace_buffer(buffer2).as_ptr() as usize == p1);
+        assert!(allocator.replace_buffer(&mut []).as_ptr() as usize == p2);
+        assert!(allocator.replace_buffer(&mut []).is_empty());
+    }
 
     #[test]
     fn test_bump_allocator() {

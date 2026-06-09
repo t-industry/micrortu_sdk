@@ -23,7 +23,7 @@ pub use ie_base;
 pub use ie_representation_derive::{finalize, params, ports, register_block, Config};
 pub use wasm_global_shared_data;
 
-pub use bump_allocator::BumpAllocator;
+pub use bump_allocator::{BumpAllocator, AllocError};
 pub use ie_base::IEBuf;
 pub use wasm_global_shared_data::{
     BindingDefinition, Direction, FactoryInput, NativeBindingDefinition, ParseError, Shared,
