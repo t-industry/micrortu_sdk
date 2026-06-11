@@ -1,11 +1,11 @@
-use core::convert::Infallible;
+#[cfg(not(feature = "micrortu_sdk_internal"))]
+use {core::convert::Infallible, ufmt::uWrite};
 
-use ufmt::uWrite;
-
-#[doc(hidden)]
+#[cfg(not(feature = "micrortu_sdk_internal"))]
 pub struct LogWriter;
 
 #[rustfmt::skip]
+#[cfg(not(feature = "micrortu_sdk_internal"))]
 #[allow(clippy::too_many_arguments)]
 fn log_append(len: u64, b1: u64, b2: u64, b3: u64, b4: u64, b5: u64,
     b6: u64, b7: u64, b8: u64, b9: u64, b10: u64, b11: u64,
@@ -20,7 +20,7 @@ fn log_append(len: u64, b1: u64, b2: u64, b3: u64, b4: u64, b5: u64,
     }
 }
 
-#[doc(hidden)]
+#[cfg(not(feature = "micrortu_sdk_internal"))]
 pub fn log_emit(level: i64) {
     extern "C" {
         fn log_emit(level: i64);
@@ -28,6 +28,7 @@ pub fn log_emit(level: i64) {
     unsafe { log_emit(level) }
 }
 
+#[cfg(not(feature = "micrortu_sdk_internal"))]
 impl uWrite for LogWriter {
     type Error = Infallible;
 
