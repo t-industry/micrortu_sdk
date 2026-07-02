@@ -1,4 +1,4 @@
-use core::{cell::RefCell, mem, ptr};
+use core::{cell::RefCell, mem, mem::MaybeUninit, ptr};
 
 #[repr(C)]
 union SliceOrEmpty {
@@ -35,26 +35,26 @@ impl BumpAllocator {
     pub fn alloc<'a, T>(&self, value: T) -> &'a mut T {
         match self.try_alloc(value) {
             Ok(buffer) => buffer,
-            Err(e) => {
-                log::error!("{e}");
-                panic!("{e}");
-            }
+            Err(e) => panic!("{e}"),
         }
     }
 
     #[inline(always)]
     pub fn try_alloc<'a, T>(&self, value: T) -> Result<&'a mut T, AllocError> {
-        let size = mem::size_of::<T>();
-        let align = mem::align_of::<T>();
+        self.try_alloc_uninit().map(|u| u.write(value))
+    }
+
+    #[inline(always)]
+    pub fn try_alloc_uninit<'a, T>(&self) -> Result<&'a mut MaybeUninit<T>, AllocError> {
+        let size = size_of::<T>();
+        let align = align_of::<T>();
 
         let allocated = self.try_alloc_inner(size, align)?;
-        let ptr = ptr::from_mut::<[u8]>(allocated).cast::<mem::MaybeUninit<T>>();
+        let ptr = ptr::from_mut::<[u8]>(allocated).cast::<MaybeUninit<T>>();
 
         // SAFETY: `ptr` is properly aligned and has the correct size,
         //         memory is uniquely referenced
-        let maybe_uninit = unsafe { &mut *ptr };
-
-        Ok(maybe_uninit.write(value))
+        Ok(unsafe { &mut *ptr })
     }
 
     fn get_refcell(&self) -> &RefCell<&'static mut [u8]> {
