@@ -19,7 +19,7 @@ pub struct FirmwareDump {
     pub blocks: Vec<Block>,
 }
 
-#[derive(Serialize, JsonSchema, Validate, Deserialize, Clone, Debug)]
+#[derive(Serialize, JsonSchema, Validate, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Block {
     #[validate(length(min = 1, max = 32))]
     pub name: String,
@@ -65,7 +65,7 @@ pub enum IEType {
     TI203 = 203,
 }
 
-#[derive(Serialize, JsonSchema, Validate, Deserialize, Clone, Debug)]
+#[derive(Serialize, JsonSchema, Validate, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Port {
     #[validate(length(min = 1, max = 32))]
     pub name: String,
@@ -148,7 +148,7 @@ fn default_required() -> bool {
     true
 }
 
-#[derive(Serialize, JsonSchema, Validate, Deserialize, Clone, Debug)]
+#[derive(Serialize, JsonSchema, Validate, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct BlockConf {
     #[serde(default = "default_required")]
     pub required: bool,

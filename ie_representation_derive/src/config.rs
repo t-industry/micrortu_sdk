@@ -5,7 +5,7 @@ use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Fields, Meta, Type};
 
 use crate::{
     bindings::parse_block_names,
-    state::{set_block_conf, should_bail_on_duplicates},
+    state::{set_block_conf, Loc},
 };
 
 pub fn derive_config(input: TokenStream) -> TokenStream {
@@ -67,13 +67,16 @@ pub fn derive_config(input: TokenStream) -> TokenStream {
 
     let block_conf = BlockConf { required, fields };
 
-    for block_name in block_names {
-        let res = set_block_conf(&block_name, block_conf.clone());
-
-        if res.is_some() && should_bail_on_duplicates() {
-            return syn::Error::new_spanned(name, "Config with that name already exists")
-                .to_compile_error()
-                .into();
+    for block_name in &block_names {
+        let block = block_name.to_string();
+        let loc = Loc::of(block_name.span());
+        if let Err(prev) = set_block_conf(&block, block_conf.clone(), loc) {
+            return syn::Error::new_spanned(
+                block_name,
+                format!("conflicting config for block `{block}`: already defined at {prev}"),
+            )
+            .to_compile_error()
+            .into();
         }
     }
 

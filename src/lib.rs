@@ -20,7 +20,11 @@ use core::mem::{ManuallyDrop, MaybeUninit};
 pub use getters_setters::*;
 pub use ie_base;
 /// Macros for generating parser of arguments block requires.
-pub use ie_representation_derive::{finalize, params, ports, register_block, Config};
+pub use ie_representation_derive::{
+    export_blocks, finalize, import_blocks, params, ports, register_block, Config,
+};
+#[doc(hidden)]
+pub use ie_representation_derive::__replay_meta;
 pub use wasm_global_shared_data;
 
 pub use bump_allocator::{BumpAllocator, AllocError};

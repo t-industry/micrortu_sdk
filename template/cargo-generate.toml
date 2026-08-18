@@ -11,6 +11,14 @@ type = "bool"
 [conditional.'wasm == true']
 ignore = ["project-no-wasm.json5"]
 
+[conditional.'wasm == true'.placeholders.library]
+prompt = "Is this a reusable block library instead of a final blob crate?"
+type = "bool"
+default = false
+
+[conditional.'library == true']
+ignore = ["project-wasm.json5", "project-no-wasm.json5", ".cargo"]
+
 [conditional.'wasm == false']
 ignore = ["Cargo.toml", "src", ".cargo", "project-wasm.json5"]
 

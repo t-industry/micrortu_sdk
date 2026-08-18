@@ -59,6 +59,30 @@ pub fn step(shared: &mut Shared, _: &mut Counter) -> StepResult {
 register_block!(Counter, counter, factory, init, step);
 ```
 
+The final crate must also call `micrortu_sdk::finalize!();` at the top level,
+after all block registrations. It embeds the metadata and binding tables the
+firmware reads.
+
+## Block Libraries
+
+Blocks can live in ordinary library crates and be reused from other crates. A
+library defines blocks as in the example above and closes with
+`export_blocks!()` instead of `finalize!()`. The consuming crate registers
+them with `import_blocks!`:
+
+```rust,ignore
+// in the library crate, after the block definitions
+micrortu_sdk::export_blocks!(counter);
+
+// in the final crate
+micrortu_sdk::import_blocks!(my_library::counter);
+micrortu_sdk::finalize!(counter);
+```
+
+Both closing macros optionally take the complete list of block names and fail
+the build unless it matches the registered blocks. Libraries can also import
+blocks from other libraries and re-export them alongside their own.
+
 ## WASM Binary Layout for Non-Rust builds
 
 If you don't want to use Rust and `micrortu_sdk` macros, you can still create a

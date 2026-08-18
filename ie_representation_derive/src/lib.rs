@@ -5,22 +5,34 @@ use proc_macro::TokenStream;
 mod bindings;
 mod config;
 mod finalize;
+mod import;
 mod register_block;
 mod state;
 
 /// Finalize the build process.
-/// That macro must be called at the end to embed metadata into the binary.
-/// It creates a link section "metadata" with json data of all registered blocks
-/// and exported symbol `COLLECTED_STRINGS` with all strings from the build.
-/// `BindingDefinition`'s `name_offset` and `name_len` are referencing `COLLECTED_STRINGS`.
+/// That macro must be called after all block registrations in the same crate
+/// to embed metadata into the binary. It creates a link section "metadata"
+/// with json data of all registered blocks, an exported symbol
+/// `COLLECTED_STRINGS` with all port and param names, and the
+/// `PORTS_*`/`PARAMS_*` binding definition statics, whose `name_offset` and
+/// `name_len` reference `COLLECTED_STRINGS`.
+///
+/// Optionally takes the complete list of block names and errors unless it
+/// matches the registered blocks exactly, which catches blocks that were
+/// registered in another crate or after `finalize!`.
+///
+/// Like `export_blocks!`, it also exports the hidden replay macros that let
+/// other crates register these blocks with `import_blocks!`.
 /// # Example
 /// ```rust
 /// finalize!();
+/// // or, with the expected block list checked:
+/// finalize!(counter, gauge);
 /// ```
 ///
 #[proc_macro]
-pub fn finalize(_: TokenStream) -> TokenStream {
-    finalize::finalize()
+pub fn finalize(input: TokenStream) -> TokenStream {
+    finalize::finalize(input)
 }
 
 /// Register block.
@@ -32,6 +44,41 @@ pub fn finalize(_: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn register_block(input: TokenStream) -> TokenStream {
     register_block::register_block(input)
+}
+
+/// Export the blocks of a library crate.
+/// Performs the same collection and validation as `finalize!` and exports one
+/// hidden replay macro per block, so a final crate can register them with
+/// `import_blocks!`. Emits no symbols, so it is the right closing macro for
+/// library crates. Optionally takes the complete block list, like `finalize!`.
+/// # Example
+/// ```rust
+/// export_blocks!();
+/// ```
+#[proc_macro]
+pub fn export_blocks(input: TokenStream) -> TokenStream {
+    finalize::export_blocks(input)
+}
+
+/// Register blocks exported by other crates.
+/// Each path names the exporting crate and the block. The block's metadata is
+/// replayed into this crate's registry, so `finalize!` covers it; the block's
+/// code and wasm symbols come from the exporting crate.
+/// # Example
+/// ```rust
+/// import_blocks!(lib_a::pid, lib_b::twv_ctrl);
+/// ```
+#[proc_macro]
+pub fn import_blocks(input: TokenStream) -> TokenStream {
+    import::import_blocks(input)
+}
+
+/// Entry point for the replay macros exported by `export_blocks!` and
+/// `finalize!`. Not for direct use.
+#[doc(hidden)]
+#[proc_macro]
+pub fn __replay_meta(input: TokenStream) -> TokenStream {
+    import::replay_meta(input)
 }
 
 /// Derive macro for `Config` trait.

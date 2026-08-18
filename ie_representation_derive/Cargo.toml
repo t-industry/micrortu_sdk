@@ -7,6 +7,9 @@ keywords.workspace = true
 categories.workspace = true
 license.workspace = true
 description.workspace = true
+# Span::file/line/column, used to key registrations by call site.
+rust-version = "1.88"
+links = "micrortu_block_registry"
 
 [lib]
 proc-macro = true

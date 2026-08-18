@@ -1,4 +1,4 @@
-mod counter {
+{% if library %}pub {% endif %}mod counter {
     use micrortu_sdk::{
         BlockPorts, FactoryInput, Shared, StepResult, params, ports, register_block,
     };
@@ -36,10 +36,23 @@ mod counter {
 
     register_block!(Counter, counter, factory, init, step);
 }
+{% if library %}
+micrortu_sdk::export_blocks!(counter);
 
+#[cfg(test)]
+mod tests {
+    use micrortu_sdk::BlockPorts;
+
+    #[test]
+    fn counter_ports() {
+        assert_eq!(crate::counter::Ports::report().len(), 1, "counter has one port");
+    }
+}
+{% else %}
 #[unsafe(no_mangle)]
 pub extern "C" fn init() {
     micrortu_sdk::init_logger();
 }
 
 micrortu_sdk::finalize!();
+{% endif %}

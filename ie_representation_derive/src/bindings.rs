@@ -11,7 +11,7 @@ use syn::{
     Attribute, Ident, LitInt, Meta, MetaList, Token, Visibility,
 };
 
-use crate::state::{set_params, set_ports, should_bail_on_duplicates};
+use crate::state::{set_params, set_ports, Loc};
 
 struct Port {
     attrs: Vec<Attribute>,
@@ -126,25 +126,25 @@ impl Parse for Port {
 
 struct PortsInput {
     attrs: Vec<Attribute>,
-    block_names: Vec<String>,
+    block_names: Vec<Ident>,
     visibility: Visibility,
     struct_name: Ident,
     ports: Punctuated<Port, Token![,]>,
 }
 
 struct BlockNames {
-    names: Vec<String>,
+    names: Vec<Ident>,
 }
 
 impl Parse for BlockNames {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let names: Punctuated<Ident, _> = input.parse_terminated(|it| it.parse(), Token![,])?;
-        let names = names.iter().map(|i| i.to_string()).collect();
+        let names = names.into_iter().collect();
         Ok(Self { names })
     }
 }
 
-pub fn parse_block_names(tokens: TokenStream, names: &mut Vec<String>) -> TokenStream {
+pub fn parse_block_names(tokens: TokenStream, names: &mut Vec<Ident>) -> TokenStream {
     let parsed = parse_macro_input!(tokens as BlockNames);
     *names = parsed.names;
     quote! {}.into()
@@ -335,17 +335,20 @@ pub fn bindings(input: TokenStream, is_ports: bool) -> TokenStream {
         });
     }
 
-    for block_name in block_names {
+    for block_name in &block_names {
+        let name = block_name.to_string();
+        let loc = Loc::of(block_name.span());
         let res = if is_ports {
-            set_ports(&block_name, meta_bindings.clone())
+            set_ports(&name, meta_bindings.clone(), loc)
         } else {
-            set_params(&block_name, meta_bindings.clone())
+            set_params(&name, meta_bindings.clone(), loc)
         };
 
-        if res.is_some() && should_bail_on_duplicates() {
+        if let Err(prev) = res {
+            let kind = if is_ports { "ports" } else { "params" };
             errors.push(syn::Error::new_spanned(
-                block_name.clone(),
-                format!("Bindings are already defined for block `{block_name}`"),
+                block_name,
+                format!("conflicting {kind} for block `{name}`: already defined at {prev}"),
             ));
         }
     }

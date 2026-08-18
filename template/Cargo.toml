@@ -3,10 +3,10 @@ name = "{{project-name}}"
 version = "0.1.0"
 edition = "2024"
 
-[lib]
+{% unless library %}[lib]
 crate-type = ["cdylib"]
 
-[profile.release]
+{% endunless %}[profile.release]
 panic = "abort"
 opt-level = "z"
 strip = true
@@ -14,8 +14,6 @@ lto = true
 codegen-units = 1
 
 [dependencies]
-micrortu_sdk = "0.5.13"
+micrortu_sdk = "0.5.22"
 static_cell = "2.1.1"
-ufmt = "0.2.0"
-zerocopy = "0.8.50"
 
