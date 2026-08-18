@@ -32,7 +32,11 @@ pub use wasm_global_shared_data::{
 // these re-exports are used by `ie_representation_derive::register_block! macro`
 pub use wasm_global_shared_data::{IN, IN_OUT, OUT};
 
+// used by macro expansions so consumers need no direct dependency on them
+#[doc(hidden)]
 pub use ufmt;
+#[doc(hidden)]
+pub use zerocopy;
 
 pub fn init_logger() {}
 

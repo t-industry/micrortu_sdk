@@ -70,7 +70,8 @@ impl uWrite for LogWriter {
 #[macro_export]
 macro_rules! log {
     ($level:expr, $($arg:tt)*) => {{
-        _ = ::micrortu_sdk::ufmt::uwrite!(::micrortu_sdk::log::LogWriter, $($arg)*);
+        use ::micrortu_sdk::ufmt;
+        _ = ufmt::uwrite!(::micrortu_sdk::log::LogWriter, $($arg)*);
         ::micrortu_sdk::log::log_emit($level);
     }}
 }
